@@ -18,6 +18,7 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import DataRequired, Email, Length, URL
 from flask_wtf.csrf import CSRFProtect
 from flask_wtf import FlaskForm
+from flask import current_app
 
 # Load environment variables from .env file
 load_dotenv()
@@ -146,7 +147,7 @@ class LoginForm(FlaskForm):
 # Define Celery task for checking website status
 @celery.task
 def check_website_status():
-    with app.app_context():
+    with current_app.app_context():
         app.logger.info(f"Checking website status at {datetime.utcnow()}")
         websites = Website.query.all()
         headers = {
@@ -155,24 +156,33 @@ def check_website_status():
             try:
                 r = requests.get(website.url, headers=headers)
                 r.raise_for_status()  # raise exception if status code is not 200
-                website.status = True
+                status = True
             except requests.exceptions.RequestException as e:
-                website.status = False
+                status = False
                 app.logger.error(f'Request failed for website {website.url}: {str(e)}')
-            website.last_checked = datetime.utcnow()
-            db.session.add(website)
-        for website in websites:
-            if website.status and not website.last_notified:
-                send_email(website.email, website.url)
-                website.last_notified = datetime.utcnow()
+
+            # Check if the status has changed
+            if status != website.status:
+                website.status = status
+                website.last_checked = datetime.utcnow()
                 db.session.add(website)
+
+                # Send an email to the user
+                send_email(website.email, website.url, status)
 
         db.session.commit()
 
 
-def send_email(to, website):
-    msg = Message('Website back online', sender=os.environ.get('MAIL_USERNAME'), recipients=[to])
-    msg.body = 'The website %s is back online' % website
+def send_email(to, website, status):
+    if status:
+        subject = 'Website back online'
+        body = 'The website %s is back online' % website
+    else:
+        subject = 'Website offline'
+        body = 'The website %s is currently offline' % website
+
+    msg = Message(subject, sender=os.environ.get('MAIL_USERNAME'), recipients=[to])
+    msg.body = body
     mail.send(msg)
 
 
