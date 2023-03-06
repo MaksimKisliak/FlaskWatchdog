@@ -55,7 +55,7 @@ celery.conf.update(app.config)
 celery.conf.beat_schedule = {
     'check-website-status': {
         'task': 'app.check_website_status',
-        'schedule': crontab(minute='*/1')  # Run every 1 minute
+        'schedule': crontab(minute='*/3')  # Run every 3 minute
     }
 }
 

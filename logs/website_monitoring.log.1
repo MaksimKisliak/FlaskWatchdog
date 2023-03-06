@@ -1,118 +1,25 @@
-2023-03-06 18:43:09,733 ERROR: Exception on / [POST] [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/flask/app.py:1744]
-Traceback (most recent call last):
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
-    self.dialect.do_execute(
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 748, in do_execute
-    cursor.execute(statement, parameters)
-sqlite3.IntegrityError: NOT NULL constraint failed: website.email
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/flask/app.py", line 2528, in wsgi_app
-    response = self.full_dispatch_request()
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/flask/app.py", line 1825, in full_dispatch_request
-    rv = self.handle_user_exception(e)
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/flask/app.py", line 1823, in full_dispatch_request
-    rv = self.dispatch_request()
-         ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/flask/app.py", line 1799, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/flask_login/utils.py", line 290, in decorated_view
-    return current_app.ensure_sync(func)(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py", line 189, in homepage
-    db.session.commit()
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/orm/scoping.py", line 553, in commit
-    return self._proxied.commit()
-           ^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 1903, in commit
-    trans.commit(_to_root=True)
-  File "<string>", line 2, in commit
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
-    ret_value = fn(self, *arg, **kw)
-                ^^^^^^^^^^^^^^^^^^^^
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 1218, in commit
-    self._prepare_impl()
-  File "<string>", line 2, in _prepare_impl
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
-    ret_value = fn(self, *arg, **kw)
-                ^^^^^^^^^^^^^^^^^^^^
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 1193, in _prepare_impl
-    self.session.flush()
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 4155, in flush
-    self._flush(objects)
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 4291, in _flush
-    with util.safe_reraise():
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/util/langhelpers.py", line 147, in __exit__
-    raise exc_value.with_traceback(exc_tb)
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/orm/session.py", line 4252, in _flush
-    flush_context.execute()
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py", line 467, in execute
-    rec.execute(self)
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/orm/unitofwork.py", line 644, in execute
-    util.preloaded.orm_persistence.save_obj(
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py", line 93, in save_obj
-    _emit_insert_statements(
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/orm/persistence.py", line 1184, in _emit_insert_statements
-    result = connection.execute(
-             ^^^^^^^^^^^^^^^^^^^
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1414, in execute
-    return meth(
-           ^^^^^
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 486, in _execute_on_connection
-    return connection._execute_clauseelement(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1638, in _execute_clauseelement
-    ret = self._execute_context(
-          ^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1842, in _execute_context
-    return self._exec_single_context(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1983, in _exec_single_context
-    self._handle_dbapi_exception(
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2326, in _handle_dbapi_exception
-    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
-    self.dialect.do_execute(
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 748, in do_execute
-    cursor.execute(statement, parameters)
-sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: website.email
-[SQL: INSERT INTO website (url, email, last_checked, status, last_notified, user_id) VALUES (?, ?, ?, ?, ?, ?)]
-[parameters: ('https://inpol.mazowieckie.pl/login', None, None, None, None, 3)]
-(Background on this error at: https://sqlalche.me/e/20/gkpj)
-2023-03-06 19:01:38,433 INFO: Website monitoring startup [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:93]
-2023-03-06 19:03:51,244 INFO: Website monitoring startup [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:93]
-2023-03-06 19:05:51,885 INFO: Website monitoring startup [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:93]
-2023-03-06 19:05:57,310 INFO: Website monitoring startup [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:93]
-2023-03-06 19:06:00,993 INFO: Website monitoring startup [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:93]
-2023-03-06 19:07:00,032 INFO: Checking website status at 2023-03-06 18:07:00.031868 [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:153]
-2023-03-06 19:08:00,016 INFO: Checking website status at 2023-03-06 18:08:00.016236 [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:153]
-2023-03-06 19:08:56,856 ERROR: Exception on /delete_website/1 [POST] [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/flask/app.py:1744]
-Traceback (most recent call last):
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/flask/app.py", line 2528, in wsgi_app
-    response = self.full_dispatch_request()
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/flask/app.py", line 1825, in full_dispatch_request
-    rv = self.handle_user_exception(e)
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/flask/app.py", line 1823, in full_dispatch_request
-    rv = self.dispatch_request()
-         ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/flask/app.py", line 1799, in dispatch_request
-    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/maksimkisliak/PycharmProjects/FlaskWatchdog/venv/lib/python3.11/site-packages/flask_login/utils.py", line 290, in decorated_view
-    return current_app.ensure_sync(func)(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: delete_website() got an unexpected keyword argument 'id'
-2023-03-06 19:09:00,006 INFO: Checking website status at 2023-03-06 18:09:00.006627 [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:153]
-2023-03-06 19:11:58,811 INFO: Website monitoring startup [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:93]
-2023-03-06 19:14:40,564 INFO: Website monitoring startup [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:93]
-2023-03-06 19:14:41,972 INFO: Website monitoring startup [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:93]
-2023-03-06 19:14:42,020 INFO: Checking website status at 2023-03-06 18:14:42.020675 [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:153]
-2023-03-06 19:15:00,017 INFO: Checking website status at 2023-03-06 18:15:00.017217 [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:153]
-2023-03-06 19:16:00,009 INFO: Checking website status at 2023-03-06 18:16:00.009083 [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:153]
+2023-03-06 20:45:00,087 ERROR: Request failed for website https://inpol.mazowieckie.pl/login: HTTPSConnectionPool(host='inpol.mazowieckie.pl', port=443): Max retries exceeded with url: /login (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083a3450>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:45:00,127 ERROR: Request failed for website https://context.reverso.net/translation/: HTTPSConnectionPool(host='context.reverso.net', port=443): Max retries exceeded with url: /translation/ (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083ac150>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:45:00,224 ERROR: Request failed for website https://inpol.mazowieckie.pl/login: HTTPSConnectionPool(host='inpol.mazowieckie.pl', port=443): Max retries exceeded with url: /login (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083bb590>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:45:00,271 ERROR: Request failed for website https://github.com/wong2/chatgpt-google-extension: HTTPSConnectionPool(host='github.com', port=443): Max retries exceeded with url: /wong2/chatgpt-google-extension (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x10837d790>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:45:00,294 ERROR: Request failed for website https://github.com/wong2/chatgpt-google-extension: HTTPSConnectionPool(host='github.com', port=443): Max retries exceeded with url: /wong2/chatgpt-google-extension (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083af0d0>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:45:00,397 ERROR: Request failed for website https://linktr.ee/zaorski: HTTPSConnectionPool(host='linktr.ee', port=443): Max retries exceeded with url: /zaorski (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083a3210>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:45:00,419 ERROR: Request failed for website https://v3.aggr.trade/scxh: HTTPSConnectionPool(host='v3.aggr.trade', port=443): Max retries exceeded with url: /scxh (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083b7750>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:48:00,012 INFO: Checking website status at 2023-03-06 19:48:00.011979 [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:150]
+2023-03-06 20:48:00,041 ERROR: Request failed for website https://inpol.mazowieckie.pl/login: HTTPSConnectionPool(host='inpol.mazowieckie.pl', port=443): Max retries exceeded with url: /login (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083c94d0>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:48:00,064 ERROR: Request failed for website https://inpol.mazowieckie.pl/login: HTTPSConnectionPool(host='inpol.mazowieckie.pl', port=443): Max retries exceeded with url: /login (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083cb310>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:48:00,104 ERROR: Request failed for website https://context.reverso.net/translation/: HTTPSConnectionPool(host='context.reverso.net', port=443): Max retries exceeded with url: /translation/ (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083ca6d0>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:48:00,190 ERROR: Request failed for website https://inpol.mazowieckie.pl/login: HTTPSConnectionPool(host='inpol.mazowieckie.pl', port=443): Max retries exceeded with url: /login (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x108360c50>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:48:00,226 ERROR: Request failed for website https://github.com/wong2/chatgpt-google-extension: HTTPSConnectionPool(host='github.com', port=443): Max retries exceeded with url: /wong2/chatgpt-google-extension (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083b4490>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:48:00,239 ERROR: Request failed for website https://github.com/wong2/chatgpt-google-extension: HTTPSConnectionPool(host='github.com', port=443): Max retries exceeded with url: /wong2/chatgpt-google-extension (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083a28d0>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:48:00,320 ERROR: Request failed for website https://linktr.ee/zaorski: HTTPSConnectionPool(host='linktr.ee', port=443): Max retries exceeded with url: /zaorski (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083ac990>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:48:00,337 ERROR: Request failed for website https://v3.aggr.trade/scxh: HTTPSConnectionPool(host='v3.aggr.trade', port=443): Max retries exceeded with url: /scxh (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083bb050>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:51:00,018 INFO: Checking website status at 2023-03-06 19:51:00.017903 [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:150]
+2023-03-06 20:51:00,039 ERROR: Request failed for website https://inpol.mazowieckie.pl/login: HTTPSConnectionPool(host='inpol.mazowieckie.pl', port=443): Max retries exceeded with url: /login (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083aca10>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:51:00,057 ERROR: Request failed for website https://inpol.mazowieckie.pl/login: HTTPSConnectionPool(host='inpol.mazowieckie.pl', port=443): Max retries exceeded with url: /login (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x107d58d50>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:51:00,093 ERROR: Request failed for website https://context.reverso.net/translation/: HTTPSConnectionPool(host='context.reverso.net', port=443): Max retries exceeded with url: /translation/ (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083b5950>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:51:00,179 ERROR: Request failed for website https://inpol.mazowieckie.pl/login: HTTPSConnectionPool(host='inpol.mazowieckie.pl', port=443): Max retries exceeded with url: /login (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083ca250>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:51:00,216 ERROR: Request failed for website https://github.com/wong2/chatgpt-google-extension: HTTPSConnectionPool(host='github.com', port=443): Max retries exceeded with url: /wong2/chatgpt-google-extension (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083767d0>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:51:00,235 ERROR: Request failed for website https://github.com/wong2/chatgpt-google-extension: HTTPSConnectionPool(host='github.com', port=443): Max retries exceeded with url: /wong2/chatgpt-google-extension (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083b7690>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:51:00,329 ERROR: Request failed for website https://linktr.ee/zaorski: HTTPSConnectionPool(host='linktr.ee', port=443): Max retries exceeded with url: /zaorski (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083c9810>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
+2023-03-06 20:51:00,386 ERROR: Request failed for website https://v3.aggr.trade/scxh: HTTPSConnectionPool(host='v3.aggr.trade', port=443): Max retries exceeded with url: /scxh (Caused by NewConnectionError('<urllib3.connection.HTTPSConnection object at 0x1083afe10>: Failed to establish a new connection: [Errno 61] Connection refused')) [in /Users/maksimkisliak/PycharmProjects/FlaskWatchdog/app.py:161]
