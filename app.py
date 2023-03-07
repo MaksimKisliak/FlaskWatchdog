@@ -6,7 +6,7 @@ from flask_login import UserMixin, LoginManager, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from celery import Celery
 from celery.schedules import crontab
-from flask import Flask, render_template, request, flash, redirect, url_for, abort
+from flask import Flask, render_template, flash, redirect, url_for, abort
 from flask_mail import Mail, Message
 import requests
 from datetime import datetime
@@ -15,10 +15,11 @@ from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms.validators import DataRequired, Email, Length, URL
+from wtforms.validators import DataRequired, Email, Length, URL, ValidationError
 from flask_wtf.csrf import CSRFProtect
 from flask_wtf import FlaskForm
 from flask import current_app
+from datetime import timedelta
 
 # Load environment variables from .env file
 load_dotenv()
@@ -56,7 +57,7 @@ celery.conf.update(app.config)
 celery.conf.beat_schedule = {
     'check-website-status': {
         'task': 'app.check_website_status',
-        'schedule': crontab(minute='*/3')  # Run every 3 minute
+        'schedule': crontab(minute='*/2')  # Run every 2 minute
     }
 }
 
@@ -95,15 +96,14 @@ if not app.debug:
 class Website(db.Model):
     __tablename__ = "website"
     id = db.Column(db.Integer, primary_key=True)
-    url = db.Column(db.String(200), nullable=False)
-    email = db.Column(db.String(120), nullable=False)
-    last_checked = db.Column(db.DateTime, nullable=True)
-    status = db.Column(db.Boolean, nullable=True)
-    last_notified = db.Column(db.DateTime, nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    url = db.Column(db.String(200), nullable=False, unique=True)
+    status = db.Column(db.Boolean, default=False)
+    last_checked = db.Column(db.DateTime)
+    last_notified = db.Column(db.DateTime)
+    users = db.relationship('User', secondary='user_website')
 
     def __repr__(self):
-        return '<Website %r>' % self.url
+        return f"Website('{self.url}', '{self.status}', '{self.last_checked}', '{self.last_notified}')"
 
 
 # Define user model
@@ -112,8 +112,8 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
-    is_admin = db.Column(db.Boolean, nullable=False, default=False)
-    websites = db.relationship('Website', backref='user', lazy=True)
+    is_admin = db.Column(db.Boolean, default=False)
+    websites = db.relationship('Website', secondary='user_website')
 
     def __repr__(self):
         return '<User %r>' % self.email
@@ -125,9 +125,16 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
 
+class UserWebsite(db.Model):
+    __tablename__ = 'user_website'
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    website_id = db.Column(db.Integer, db.ForeignKey('website.id'), primary_key=True)
+    user = db.relationship('User', backref=db.backref('user_websites', cascade='all,delete'))
+    website = db.relationship('Website', backref=db.backref('website_users', cascade='all,delete'))
+
+
 class WebsiteForm(FlaskForm):
-    url = StringField('URL', validators=[DataRequired(), URL()])
-    email = StringField('Email', validators=[DataRequired(), Email()])
+    url = StringField('URL', validators=[DataRequired(), URL(require_tld=False)])
     submit = SubmitField('Add Website')
 
 
@@ -144,46 +151,54 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Login')
 
 
-# Define Celery task for checking website status
-@celery.task
-def check_website_status():
-    with current_app.app_context():
-        app.logger.info(f"Checking website status at {datetime.utcnow()}")
-        websites = Website.query.all()
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
-        for website in websites:
-            try:
-                r = requests.get(website.url, headers=headers)
-                r.raise_for_status()  # raise exception if status code is not 200
-                status = True
-            except requests.exceptions.RequestException as e:
-                status = False
-                app.logger.error(f'Request failed for website {website.url}: {str(e)}')
-
-            # Check if the status has changed
-            if status != website.status:
-                website.status = status
-                website.last_checked = datetime.utcnow()
-                db.session.add(website)
-
-                # Send an email to the user
-                send_email(website.email, website.url, status)
-
-        db.session.commit()
+class RegisterForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
+    submit = SubmitField('Login')
 
 
-def send_email(to, website, status):
-    if status:
-        subject = 'Website back online'
-        body = 'The website %s is back online' % website
-    else:
-        subject = 'Website offline'
-        body = 'The website %s is currently offline' % website
+@celery.task(name='check_website_status')
+def check_website_status(website_id):
+    website = Website.query.get(website_id)
+    if website:
+        # check website status
+        status = check_status(website.url)
+        if status != website.status:
+            website.status = status
+            website.last_checked = datetime.utcnow()
+            db.session.commit()
 
-    msg = Message(subject, sender=os.environ.get('MAIL_USERNAME'), recipients=[to])
-    msg.body = body
-    mail.send(msg)
+            # send email notification to website users
+            send_email(website, status)
+
+
+def check_status(url):
+    # check website status and return True if it's online, False otherwise
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"}
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code == 200:
+            return True
+        else:
+            return False
+    except:
+        return False
+
+
+@celery.task(name='send_email')
+def send_email(website, status):
+    for user in website.users:
+        if status:
+            subject = 'Website back online'
+            body = 'The website %s is back online' % website.url
+        else:
+            subject = 'Website offline'
+            body = 'The website %s is currently offline' % website.url
+
+        msg = Message(subject, sender=os.environ.get('MAIL_USERNAME'), recipients=[user.email])
+        msg.body = body
+        mail.send(msg)
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -191,12 +206,26 @@ def send_email(to, website, status):
 def homepage():
     form = WebsiteForm()
     if form.validate_on_submit():
-        website = Website(url=form.url.data, email=form.email.data, user=current_user)
-        db.session.add(website)
-        db.session.commit()
-        flash('Website added successfully!', 'success')
-        return redirect(url_for('homepage'))
-    websites = Website.query.filter_by(user_id=current_user.id).all()
+        # check if website already exists in db
+        existing_website = Website.query.filter_by(url=form.url.data.split('/')[2]).first()
+
+        if existing_website:
+            # add user to existing website
+            if current_user not in existing_website.users:
+                existing_website.users.append(current_user)
+                db.session.commit()
+
+            flash('Website added successfully.')
+        else:
+            # add new website to db and add current user to its users
+            website = Website(url=form.url.data.split('/')[2])
+            website.users.append(current_user)
+            db.session.add(website)
+            db.session.commit()
+
+            flash('Website added successfully.')
+
+    websites = current_user.websites
     return render_template('index.html', form=form, websites=websites)
 
 
@@ -226,13 +255,14 @@ def register():
     if current_user.is_authenticated and current_user.is_admin:
         is_admin = True
 
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
+    form = RegisterForm()
+    if form.validate_on_submit():
+        email = form.email.data
+        password = form.password.data
         user_exists = User.query.filter_by(email=email).first()
         if user_exists:
             flash('An account already exists with that email')
-            return redirect(url_for('register.html'))
+            return redirect(url_for('register'))
         else:
             user = User(email=email, is_admin=is_admin)
             user.set_password(password)
@@ -241,7 +271,7 @@ def register():
             login_user(user)
             return redirect(url_for('homepage'))
 
-    return render_template('register.html', is_admin=is_admin)
+    return render_template('register.html', is_admin=is_admin, form=form)
 
 
 @app.route('/logout')
@@ -277,17 +307,22 @@ def admin():
     return render_template('admin.html', users=users, form=form)
 
 
-@app.route('/delete_website/<int:id>', methods=['POST'])
+@app.route('/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_website(id):
-    website = Website.query.get(id)
-    if website and website.user_id == current_user.id:
-        db.session.delete(website)
-        db.session.commit()
-        flash('Website deleted successfully')
-    else:
+    website = Website.query.get_or_404(id)
+    if current_user not in website.users:
         abort(403)
 
+    website.users.remove(current_user)
+    db.session.commit()
+
+    if len(website.users) == 0:
+        # delete website if no users left
+        db.session.delete(website)
+        db.session.commit()
+
+    flash('Website deleted successfully.')
     return redirect(url_for('homepage'))
 
 

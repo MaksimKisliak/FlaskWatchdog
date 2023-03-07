@@ -3,6 +3,11 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
+
+    {% if current_user.is_authenticated %}
+        <h4>Logged in as: {{ current_user.email }}</h4>
+    {% endif %}
+
     <div class="container">
         <div class="row">
             <div class="col-lg-6">
@@ -11,11 +16,10 @@
                     {{ form.hidden_tag() }}
                     <div class="form-group">
                         {{ form.url.label(class="form-control-label") }}
-                        {{ form.url(class="form-control") }}
-                    </div>
-                    <div class="form-group">
-                        {{ form.email.label(class="form-control-label") }}
-                        {{ form.email(class="form-control") }}
+                        {{ form.url(class="form-control", placeholder="e.g. https://www.google.com or https://example.com/") }}
+                        {% for error in form.url.errors %}
+                            <span class="form-error">{{ error }}</span>
+                        {% endfor %}
                     </div>
                     <br>
                     <button type="submit" class="btn btn-primary">Add Website</button>
@@ -23,7 +27,7 @@
             </div>
             <div class="col-lg-6">
                 <h2>My Websites</h2>
-                {% if websites %}
+                {% if current_user.websites %}
                     <table class="table table-striped">
                         <thead>
                         <tr>
@@ -35,7 +39,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {% for website in websites %}
+                        {% for website in current_user.websites %}
                             <tr>
                                 <td>{{ website.url }}</td>
                                 <td>
