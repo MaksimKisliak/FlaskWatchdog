@@ -157,6 +157,11 @@ class RegisterForm(FlaskForm):
     submit = SubmitField('Login')
 
 
+class UpdateEmailForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Update')
+
+
 @celery.task(name='check_website_status')
 def check_website_status(website_id):
     website = Website.query.get(website_id)
@@ -194,7 +199,7 @@ def send_email(website, status):
             body = 'The website %s is back online' % website.url
         else:
             subject = 'Website offline'
-            body = 'The website %s is currently offline' % website.url
+            body = 'The website %s is currently down' % website.url
 
         msg = Message(subject, sender=os.environ.get('MAIL_USERNAME'), recipients=[user.email])
         msg.body = body
@@ -324,6 +329,21 @@ def delete_website(id):
 
     flash('Website deleted successfully.')
     return redirect(url_for('homepage'))
+
+
+@app.route('/update_email', methods=['GET', 'POST'])
+@login_required
+def update_email():
+    form = UpdateEmailForm()
+    if form.validate_on_submit():
+        if current_user.check_password(form.password.data):
+            current_user.email = form.email.data
+            db.session.commit()
+            flash('Your email has been updated.', 'success')
+            return redirect(url_for('homepage'))
+        else:
+            flash('Invalid password.', 'danger')
+    return render_template('update_email.html', form=form)
 
 
 @app.errorhandler(403)

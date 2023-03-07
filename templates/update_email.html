@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Update Email</h1>
+    <p>Update your email address.</p>
+    <hr>
+    <form method="post">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.email.label(class='form-control-label') }}
+            {{ form.email(class='form-control') }}
+            {% for error in form.email.errors %}
+                <span class="form-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <button type="submit" class="btn btn-primary">Update</button>
+    </form>
+{% endblock %}
