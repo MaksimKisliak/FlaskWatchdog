@@ -82,14 +82,14 @@ def load_user(user_id):
 if not app.debug:
     if not os.path.exists('logs'):
         os.mkdir('logs')
-    file_handler = RotatingFileHandler('logs/website_monitoring.log', maxBytes=10240, backupCount=10)
+    file_handler = RotatingFileHandler('logs/FlaskWatchdog.log', maxBytes=10240, backupCount=10)
     file_handler.setFormatter(
         logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
     file_handler.setLevel(logging.INFO)
     app.logger.addHandler(file_handler)
 
     app.logger.setLevel(logging.INFO)
-    app.logger.info('Website monitoring startup')
+    app.logger.info('FlaskWatchdog startup')
 
 
 # Define website model
