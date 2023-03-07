@@ -15,14 +15,8 @@
                 {{ form.password.label(class="form-control-label") }}
                 {{ form.password(class="form-control", required="required") }}
             </div>
-            {% if is_admin %}
-                <div class="form-group form-check">
-                    {{ form.is_admin(class="form-check-input") }}
-                    {{ form.is_admin.label(class="form-check-label") }}
-                </div>
-            {% endif %}
             <br>
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="submit" class="btn btn-primary">Sign up</button>
         </form>
     </div>
 {% endblock %}

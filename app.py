@@ -20,6 +20,7 @@ from flask_wtf.csrf import CSRFProtect
 from flask_wtf import FlaskForm
 from flask import current_app
 from datetime import timedelta
+from urllib.parse import urlparse
 
 # Load environment variables from .env file
 load_dotenv()
@@ -55,9 +56,9 @@ celery.conf.update(app.config)
 
 # Set up beat scheduler
 celery.conf.beat_schedule = {
-    'check-website-status': {
+    'check_website_status': {
         'task': 'app.check_website_status',
-        'schedule': crontab(minute='*/2')  # Run every 2 minute
+        'schedule': crontab(minute='*/1')  # Run every 2 minute
     }
 }
 
@@ -100,7 +101,8 @@ class Website(db.Model):
     status = db.Column(db.Boolean, default=False)
     last_checked = db.Column(db.DateTime)
     last_notified = db.Column(db.DateTime)
-    users = db.relationship('User', secondary='user_website')
+    users = db.relationship('User', secondary='user_website',
+                            back_populates='websites')
 
     def __repr__(self):
         return f"Website('{self.url}', '{self.status}', '{self.last_checked}', '{self.last_notified}')"
@@ -113,7 +115,8 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
-    websites = db.relationship('Website', secondary='user_website')
+    websites = db.relationship('Website', secondary='user_website',
+                               back_populates='users')
 
     def __repr__(self):
         return '<User %r>' % self.email
@@ -126,11 +129,15 @@ class User(UserMixin, db.Model):
 
 
 class UserWebsite(db.Model):
-    __tablename__ = 'user_website'
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
-    website_id = db.Column(db.Integer, db.ForeignKey('website.id'), primary_key=True)
-    user = db.relationship('User', backref=db.backref('user_websites', cascade='all,delete'))
-    website = db.relationship('Website', backref=db.backref('website_users', cascade='all,delete'))
+    __tablename__ = "user_website"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
+    website_id = db.Column(db.Integer, db.ForeignKey('website.id', ondelete='CASCADE'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'website_id'),
+    )
 
 
 class WebsiteForm(FlaskForm):
@@ -159,39 +166,47 @@ class RegisterForm(FlaskForm):
 
 class UpdateEmailForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
     submit = SubmitField('Update')
 
 
-@celery.task(name='check_website_status')
-def check_website_status(website_id):
-    website = Website.query.get(website_id)
-    if website:
-        # check website status
-        status = check_status(website.url)
-        if status != website.status:
-            website.status = status
-            website.last_checked = datetime.utcnow()
-            db.session.commit()
+@celery.task
+def check_website_status():
+    with current_app.app_context():
+        app.logger.info(f"Checking website status at {datetime.utcnow()}")
+        websites = Website.query.all()
+        for website in websites:
+            app.logger.info(f"Checking website status for {website.url} at {datetime.utcnow()}")
+            status = check_url_status(website.url)
+            app.logger.info(f"Website status for {website.url} at {datetime.utcnow()} is {status}")
+            if status != website.status:
+                website.status = status
+                website.last_checked = datetime.utcnow()
+                db.session.commit()
+                # send email notification to website users
+                send_email(website, status)
 
-            # send email notification to website users
-            send_email(website, status)
 
-
-def check_status(url):
-    # check website status and return True if it's online, False otherwise
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"}
+def check_url_status(url, timeout=10):
+    """
+    Check website status and return True if it's online, False otherwise
+    """
+    if not url.startswith('http'):
+        url = 'https://' + url
+    headers = {'User-Agent': 'Custom user agent'}
+    session = requests.Session()
+    session.headers.update(headers)
     try:
-        response = requests.get(url, headers=headers, timeout=10)
-        if response.status_code == 200:
-            return True
-        else:
-            return False
-    except:
+        app.logger.info(f"Requesting website status for {url} at {datetime.utcnow()}")
+        response = session.get(url, timeout=timeout)
+        app.logger.info(f"Status code for {url} is {response.status_code} at {datetime.utcnow()}")
+        return response.status_code == 200
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f'Request failed for website {url}: {str(e)}')
         return False
 
 
-@celery.task(name='send_email')
+@celery.task
 def send_email(website, status):
     for user in website.users:
         if status:
@@ -212,24 +227,26 @@ def homepage():
     form = WebsiteForm()
     if form.validate_on_submit():
         # check if website already exists in db
-        existing_website = Website.query.filter_by(url=form.url.data.split('/')[2]).first()
+        url = urlparse(form.url.data)
+        domain_name = url.netloc
+        website_to_check = Website.query.filter_by(url=domain_name).first()
 
-        if existing_website:
+        if website_to_check:
             # add user to existing website
-            if current_user not in existing_website.users:
-                existing_website.users.append(current_user)
+            if current_user not in website_to_check.users:
+                website_to_check.users.append(current_user)
                 db.session.commit()
-
             flash('Website added successfully.')
+            return redirect(url_for('homepage'))
         else:
             # add new website to db and add current user to its users
-            website = Website(url=form.url.data.split('/')[2])
+            website = Website(url=domain_name)
             website.users.append(current_user)
             db.session.add(website)
             db.session.commit()
 
             flash('Website added successfully.')
-
+            return redirect(url_for('homepage'))
     websites = current_user.websites
     return render_template('index.html', form=form, websites=websites)
 
@@ -362,7 +379,7 @@ def internal_error(error):
     return render_template('errors/500.html', error=error), 500
 
 
-cli = FlaskGroup(True)
+cli = FlaskGroup()
 
 
 @cli.command('init-db')
