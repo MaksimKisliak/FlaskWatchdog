@@ -99,14 +99,9 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
-    notification_limit = db.Column(db.Integer, nullable=False, default=30)
+    remaining_notifications = db.Column(db.Integer, default=30)
 
     websites = db.relationship('Website', secondary='user_website', back_populates='users')
-    last_notified = db.relationship('LastNotified', back_populates='user', cascade='all, delete-orphan',
-                                    passive_deletes=True)
-
-    def __repr__(self):
-        return '<User %r>' % self.email
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -124,31 +119,6 @@ class Website(db.Model):
     last_checked = db.Column(db.DateTime)
 
     users = db.relationship('User', secondary='user_website', back_populates='websites')
-    last_notified = db.relationship('LastNotified', uselist=True, back_populates='website',
-                                    cascade='all, delete-orphan', passive_deletes=True)
-
-    def __repr__(self):
-        return f"Website('{self.url}', '{self.status}', '{self.last_checked}', '{self.last_notified}')"
-
-
-class LastNotified(db.Model):
-    __tablename__ = "last_notified"
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    website_id = db.Column(db.Integer, db.ForeignKey('website.id'))
-    status = db.Column(db.Boolean, default=False)
-    last_notified = db.Column(db.DateTime, nullable=True)
-    remaining_notifications = db.Column(db.Integer, nullable=False)
-
-    user = db.relationship('User', back_populates='last_notified')
-    website = db.relationship('Website', back_populates='last_notified')
-
-    __table_args__ = (
-        db.UniqueConstraint('user_id', 'website_id'),
-    )
-
-    def __repr__(self):
-        return f'<LastNotified {self.user_id}, {self.website_id}, {self.status}, {self.last_notified}>'
 
 
 class UserWebsite(db.Model):
@@ -157,6 +127,10 @@ class UserWebsite(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
     website_id = db.Column(db.Integer, db.ForeignKey('website.id', ondelete='CASCADE'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_notified = db.Column(db.DateTime)
+
+    user = db.relationship('User', backref="user_bref")
+    website = db.relationship('Website', backref='website_bref')
 
     __table_args__ = (
         db.UniqueConstraint('user_id', 'website_id'),
@@ -216,27 +190,21 @@ def check_website_status():
                 # Get the users subscribed to this website
                 users = website.users
 
-                # For each user, update the last notified field in the LastNotified model
+                # For each user, update the last notified field in the UserWebsite model
                 for user in users:
-                    last_notified = LastNotified.query.filter_by(user_id=user.id, website_id=website.id).first()
+                    user_website = UserWebsite.query.filter_by(user_id=user.id, website_id=website.id).first()
 
                     # If there is no previous record for this user-website pair, create a new one
-                    if not last_notified:
-                        last_notified = LastNotified(user_id=user.id, website_id=website.id)
-                        db.session.add(last_notified)
+                    if not user_website:
+                        user_website = UserWebsite(user_id=user.id, website_id=website.id)
+                        db.session.add(user_website)
 
-                    # Update the fields in the LastNotified model
-                    last_notified.status = status
-
-
-                    if last_notified.remaining_notifications > 0:
-                        # Decrement the remaining notifications count
-                        last_notified.remaining_notifications -= 1
-                        db.session.commit()
-
-                        # Send email to the user
+                    # Update the fields in the UserWebsite model
+                    if user_website.user.remaining_notifications > 0:
+                        user_website.user.remaining_notifications -= 1
                         send_email.delay(website, status, user)
-                        last_notified.last_notified = datetime.utcnow()
+                        user_website.last_notified = datetime.utcnow()
+                        db.session.commit()
 
 
 def check_url_status(url, timeout=10):
@@ -295,7 +263,7 @@ def homepage():
         # check if website already exists in db
         url = urlparse(form.url.data)
         domain_name = url.netloc
-        website_to_check = Website.query.filter_by(url=domain_name).first()
+        website_to_check = Website.query.filter(Website.url.contains(domain_name)).first()
 
         if website_to_check:
             # add user to existing website
@@ -313,7 +281,7 @@ def homepage():
 
             flash('Website added successfully.')
             return redirect(url_for('homepage'))
-    websites = current_user.websites
+    websites = Website.query.join(UserWebsite).filter_by(user_id=current_user.id).all()
     return render_template('index.html', form=form, websites=websites)
 
 
