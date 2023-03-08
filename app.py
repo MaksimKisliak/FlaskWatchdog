@@ -1,4 +1,6 @@
+import json
 import logging
+from functools import partial
 from logging.handlers import RotatingFileHandler
 import click
 from flask.cli import FlaskGroup
@@ -120,6 +122,15 @@ class Website(db.Model):
 
     users = db.relationship('User', secondary='user_website', back_populates='websites')
 
+    # def to_dict(self):
+    #     return {
+    #         'id': self.id,
+    #         'url': self.url,
+    #         'status': self.status,
+    #         'last_checked': self.last_checked.isoformat() if self.last_checked else None,
+    #         # add any other fields you want to include
+    #     }
+
 
 class UserWebsite(db.Model):
     __tablename__ = "user_website"
@@ -127,7 +138,7 @@ class UserWebsite(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
     website_id = db.Column(db.Integer, db.ForeignKey('website.id', ondelete='CASCADE'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    last_notified = db.Column(db.DateTime)
+    last_notified = db.Column(db.DateTime, nullable=True)
 
     user = db.relationship('User', backref="user_bref")
     website = db.relationship('Website', backref='website_bref')
@@ -135,6 +146,10 @@ class UserWebsite(db.Model):
     __table_args__ = (
         db.UniqueConstraint('user_id', 'website_id'),
     )
+
+    @classmethod
+    def get_last_notified_records(cls):
+        return cls.query.filter(cls.last_notified.isnot(None)).all()
 
 
 class WebsiteForm(FlaskForm):
@@ -202,9 +217,12 @@ def check_website_status():
                     # Update the fields in the UserWebsite model
                     if user_website.user.remaining_notifications > 0:
                         user_website.user.remaining_notifications -= 1
-                        send_email.delay(website, status, user)
+                        send_email.delay(website.url, status, user.email)
                         user_website.last_notified = datetime.utcnow()
                         db.session.commit()
+
+        # # Register the Website model with the custom serializer
+        # json.dumps = partial(json.dumps, default=Website.to_dict)
 
 
 def check_url_status(url, timeout=10):
@@ -228,31 +246,15 @@ def check_url_status(url, timeout=10):
 
 @celery.task
 def send_email(website, status, user):
-    if status:
-        subject = 'Website back online'
-        body = 'The website %s is back online' % website.url
-    else:
-        subject = 'Website offline'
-        body = 'The website %s is currently down' % website.url
+    print(website, status, user)
+    subject = 'Website back online' if status else 'Website offline'
+    body = 'The website %s is back online' % website \
+        if status else 'The website %s is currently down' % website
 
-    msg = Message(subject, sender=os.environ.get('MAIL_USERNAME'), recipients=[user.email])
+    msg = Message(subject, sender=os.environ.get('MAIL_USERNAME'), recipients=[user])
     msg.body = body
     mail.send(msg)
-
-
-@celery.task
-def send_email(website, status):
-    for user in website.users:
-        if status:
-            subject = 'Website back online'
-            body = 'The website %s is back online' % website.url
-        else:
-            subject = 'Website offline'
-            body = 'The website %s is currently down' % website.url
-
-        msg = Message(subject, sender=os.environ.get('MAIL_USERNAME'), recipients=[user.email])
-        msg.body = body
-        mail.send(msg)
+    print(f'email sent {user}')
 
 
 @app.route('/', methods=['GET', 'POST'])
