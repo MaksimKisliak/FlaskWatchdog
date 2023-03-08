@@ -147,10 +147,6 @@ class UserWebsite(db.Model):
         db.UniqueConstraint('user_id', 'website_id'),
     )
 
-    @classmethod
-    def get_last_notified_records(cls):
-        return cls.query.filter(cls.last_notified.isnot(None)).all()
-
 
 class WebsiteForm(FlaskForm):
     url = StringField('URL', validators=[DataRequired(), URL(require_tld=False)])
@@ -284,6 +280,9 @@ def homepage():
             flash('Website added successfully.')
             return redirect(url_for('homepage'))
     websites = Website.query.join(UserWebsite).filter_by(user_id=current_user.id).all()
+    # last_notified_dates = [for in website = Website.query.first()]
+    # user_websites = website.user_website
+    # for user_website in user_websites:
     return render_template('index.html', form=form, websites=websites)
 
 
