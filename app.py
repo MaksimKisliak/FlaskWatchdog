@@ -15,11 +15,10 @@ from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
-from wtforms.validators import DataRequired, Email, Length, URL, ValidationError
+from wtforms.validators import DataRequired, Email, Length, URL
 from flask_wtf.csrf import CSRFProtect
 from flask_wtf import FlaskForm
 from flask import current_app
-from datetime import timedelta
 from urllib.parse import urlparse
 
 # Load environment variables from .env file
@@ -93,21 +92,6 @@ if not app.debug:
     app.logger.info('FlaskWatchdog startup')
 
 
-# Define website model
-class Website(db.Model):
-    __tablename__ = "website"
-    id = db.Column(db.Integer, primary_key=True)
-    url = db.Column(db.String(200), nullable=False, unique=True)
-    status = db.Column(db.Boolean, default=False)
-    last_checked = db.Column(db.DateTime)
-    last_notified = db.Column(db.DateTime)
-    users = db.relationship('User', secondary='user_website',
-                            back_populates='websites')
-
-    def __repr__(self):
-        return f"Website('{self.url}', '{self.status}', '{self.last_checked}', '{self.last_notified}')"
-
-
 # Define user model
 class User(UserMixin, db.Model):
     __tablename__ = "user"
@@ -115,8 +99,11 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
-    websites = db.relationship('Website', secondary='user_website',
-                               back_populates='users')
+    notification_limit = db.Column(db.Integer, nullable=False, default=30)
+
+    websites = db.relationship('Website', secondary='user_website', back_populates='users')
+    last_notified = db.relationship('LastNotified', back_populates='user', cascade='all, delete-orphan',
+                                    passive_deletes=True)
 
     def __repr__(self):
         return '<User %r>' % self.email
@@ -126,6 +113,42 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+
+# Define website model
+class Website(db.Model):
+    __tablename__ = "website"
+    id = db.Column(db.Integer, primary_key=True)
+    url = db.Column(db.String(200), nullable=False, unique=True)
+    status = db.Column(db.Boolean, default=False)
+    last_checked = db.Column(db.DateTime)
+
+    users = db.relationship('User', secondary='user_website', back_populates='websites')
+    last_notified = db.relationship('LastNotified', uselist=True, back_populates='website',
+                                    cascade='all, delete-orphan', passive_deletes=True)
+
+    def __repr__(self):
+        return f"Website('{self.url}', '{self.status}', '{self.last_checked}', '{self.last_notified}')"
+
+
+class LastNotified(db.Model):
+    __tablename__ = "last_notified"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    website_id = db.Column(db.Integer, db.ForeignKey('website.id'))
+    status = db.Column(db.Boolean, default=False)
+    last_notified = db.Column(db.DateTime, nullable=True)
+    remaining_notifications = db.Column(db.Integer, nullable=False)
+
+    user = db.relationship('User', back_populates='last_notified')
+    website = db.relationship('Website', back_populates='last_notified')
+
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'website_id'),
+    )
+
+    def __repr__(self):
+        return f'<LastNotified {self.user_id}, {self.website_id}, {self.status}, {self.last_notified}>'
 
 
 class UserWebsite(db.Model):
@@ -175,16 +198,45 @@ def check_website_status():
     with current_app.app_context():
         app.logger.info(f"Checking website status at {datetime.utcnow()}")
         websites = Website.query.all()
+
         for website in websites:
             app.logger.info(f"Checking website status for {website.url} at {datetime.utcnow()}")
             status = check_url_status(website.url)
             app.logger.info(f"Website status for {website.url} at {datetime.utcnow()} is {status}")
+
+            # Update the last checked field in the website model
+            website.last_checked = datetime.utcnow()
+            db.session.commit()
+
+            # Check if the website status has changed
             if status != website.status:
                 website.status = status
-                website.last_checked = datetime.utcnow()
                 db.session.commit()
-                # send email notification to website users
-                send_email(website, status)
+
+                # Get the users subscribed to this website
+                users = website.users
+
+                # For each user, update the last notified field in the LastNotified model
+                for user in users:
+                    last_notified = LastNotified.query.filter_by(user_id=user.id, website_id=website.id).first()
+
+                    # If there is no previous record for this user-website pair, create a new one
+                    if not last_notified:
+                        last_notified = LastNotified(user_id=user.id, website_id=website.id)
+                        db.session.add(last_notified)
+
+                    # Update the fields in the LastNotified model
+                    last_notified.status = status
+
+
+                    if last_notified.remaining_notifications > 0:
+                        # Decrement the remaining notifications count
+                        last_notified.remaining_notifications -= 1
+                        db.session.commit()
+
+                        # Send email to the user
+                        send_email.delay(website, status, user)
+                        last_notified.last_notified = datetime.utcnow()
 
 
 def check_url_status(url, timeout=10):
@@ -204,6 +256,20 @@ def check_url_status(url, timeout=10):
     except requests.exceptions.RequestException as e:
         app.logger.error(f'Request failed for website {url}: {str(e)}')
         return False
+
+
+@celery.task
+def send_email(website, status, user):
+    if status:
+        subject = 'Website back online'
+        body = 'The website %s is back online' % website.url
+    else:
+        subject = 'Website offline'
+        body = 'The website %s is currently down' % website.url
+
+    msg = Message(subject, sender=os.environ.get('MAIL_USERNAME'), recipients=[user.email])
+    msg.body = body
+    mail.send(msg)
 
 
 @celery.task
