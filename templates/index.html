@@ -51,7 +51,7 @@
                                 </td>
                                 <td>{{ website.last_checked.strftime('%Y-%m-%d %H:%M:%S') if website.last_checked else '-' }}</td>
                                 <td>
-                                    {% for user_website in current_user.user_bref %}
+                                    {% for user_website in current_user.user_websites_bref %}
                                         {% if user_website.website_id == website.id %}
                                             {{ user_website.last_notified.strftime('%Y-%m-%d %H:%M:%S') if user_website.last_notified else '-' }}
                                         {% endif %}
@@ -71,7 +71,9 @@
                 {% else %}
                     <p>No websites added yet.</p>
                 {% endif %}
+                <p>Remaining Notifications: {{ current_user.remaining_notifications }}</p>
             </div>
         </div>
     </div>
+
 {% endblock %}

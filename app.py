@@ -1,6 +1,4 @@
-import json
 import logging
-from functools import partial
 from logging.handlers import RotatingFileHandler
 import click
 from flask.cli import FlaskGroup
@@ -22,14 +20,22 @@ from flask_wtf.csrf import CSRFProtect
 from flask_wtf import FlaskForm
 from flask import current_app
 from urllib.parse import urlparse
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__, template_folder='templates')
 csrf = CSRFProtect(app)
-
 app.app_context().push()
+
+# Initialize rate limiter
+limiter = Limiter(
+    app,
+    default_limits=["100 per day", "10 per hour"]
+)
+
 
 # Load configuration from environment variables
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
@@ -41,6 +47,7 @@ app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
+app.config['RATELIMIT_MESSAGE'] = 'Chill out, man!'
 
 db = SQLAlchemy()
 
@@ -101,9 +108,10 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
-    remaining_notifications = db.Column(db.Integer, default=30)
+    _remaining_notifications = db.Column(db.Integer, default=30)
+    last_login = db.Column(db.DateTime, nullable=True)
 
-    websites = db.relationship('Website', secondary='user_website', back_populates='users')
+    user_websites = db.relationship('UserWebsite', back_populates='user')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -111,37 +119,58 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+    def is_administrator(self):
+        return self.is_admin
+
+    def grant_admin_privileges(self):
+        self.is_admin = True
+
+    def revoke_admin_privileges(self):
+        self.is_admin = False
+
+    @property
+    def remaining_notifications(self):
+        # calculate remaining notifications based on user's plan
+        return self._remaining_notifications
+
+    @remaining_notifications.setter
+    def remaining_notifications(self, value):
+        self._remaining_notifications = value
+
+    def has_remaining_notifications(self):
+        return self._remaining_notifications > 0
+
+    def decrement_notifications(self):
+        self._remaining_notifications -= 1
+
+    def num_websites(self):
+        return len(self.user_websites_bref)
+
 
 # Define website model
 class Website(db.Model):
     __tablename__ = "website"
     id = db.Column(db.Integer, primary_key=True)
-    url = db.Column(db.String(200), nullable=False, unique=True)
+    url = db.Column(db.String(200), nullable=False, unique=True, index=True)
     status = db.Column(db.Boolean, default=False)
     last_checked = db.Column(db.DateTime)
 
-    users = db.relationship('User', secondary='user_website', back_populates='websites')
+    website_users = db.relationship('UserWebsite', back_populates='website')
 
-    # def to_dict(self):
-    #     return {
-    #         'id': self.id,
-    #         'url': self.url,
-    #         'status': self.status,
-    #         'last_checked': self.last_checked.isoformat() if self.last_checked else None,
-    #         # add any other fields you want to include
-    #     }
-
+    def __str__(self):
+        return f'<Website id={self.id}, url="{self.url}">'
 
 class UserWebsite(db.Model):
+    """Model for representing the relationship between a user and a website."""
     __tablename__ = "user_website"
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
-    website_id = db.Column(db.Integer, db.ForeignKey('website.id', ondelete='CASCADE'))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    last_notified = db.Column(db.DateTime, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), index=True, nullable=False)
+    website_id = db.Column(db.Integer, db.ForeignKey('website.id', ondelete='CASCADE'), index=True, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    last_notified = db.Column(db.DateTime(timezone=True), nullable=True)
 
-    user = db.relationship('User', backref="user_bref")
-    website = db.relationship('Website', backref='website_bref')
+    user = db.relationship('User', back_populates='user_websites')
+    website = db.relationship('Website', back_populates='website_users')
 
     __table_args__ = (
         db.UniqueConstraint('user_id', 'website_id'),
@@ -199,11 +228,11 @@ def check_website_status():
                 db.session.commit()
 
                 # Get the users subscribed to this website
-                users = website.users
+                users = [user_website.user for user_website in website.website_users]
 
                 # For each user, update the last notified field in the UserWebsite model
                 for user in users:
-                    user_website = UserWebsite.query.filter_by(user_id=user.id, website_id=website.id).first()
+                    user_website = next((user_website for user_website in website.website_users if user_website.user_id == user.id), None)
 
                     # If there is no previous record for this user-website pair, create a new one
                     if not user_website:
@@ -211,14 +240,11 @@ def check_website_status():
                         db.session.add(user_website)
 
                     # Update the fields in the UserWebsite model
-                    if user_website.user.remaining_notifications > 0:
-                        user_website.user.remaining_notifications -= 1
+                    if user.has_remaining_notifications():
+                        user.decrement_notifications()
                         send_email.delay(website.url, status, user.email)
                         user_website.last_notified = datetime.utcnow()
                         db.session.commit()
-
-        # # Register the Website model with the custom serializer
-        # json.dumps = partial(json.dumps, default=Website.to_dict)
 
 
 def check_url_status(url, timeout=10):
@@ -255,38 +281,43 @@ def send_email(website, status, user):
 
 @app.route('/', methods=['GET', 'POST'])
 @login_required
+@limiter.limit("5 per minute")
 def homepage():
     form = WebsiteForm()
     if form.validate_on_submit():
         # check if website already exists in db
         url = urlparse(form.url.data)
         domain_name = url.netloc
-        website_to_check = Website.query.filter(Website.url.contains(domain_name)).first()
+        website_to_check = Website.query.filter_by(url=domain_name).first()
 
         if website_to_check:
             # add user to existing website
-            if current_user not in website_to_check.users:
-                website_to_check.users.append(current_user)
+            user_website = UserWebsite.query.filter_by(user_id=current_user.id, website_id=website_to_check.id).first()
+            if not user_website:
+                user_website = UserWebsite(user_id=current_user.id, website_id=website_to_check.id)
+                db.session.add(user_website)
                 db.session.commit()
             flash('Website added successfully.')
             return redirect(url_for('homepage'))
         else:
             # add new website to db and add current user to its users
             website = Website(url=domain_name)
-            website.users.append(current_user)
             db.session.add(website)
+            db.session.commit()
+
+            user_website = UserWebsite(user_id=current_user.id, website_id=website.id)
+            db.session.add(user_website)
             db.session.commit()
 
             flash('Website added successfully.')
             return redirect(url_for('homepage'))
-    websites = Website.query.join(UserWebsite).filter_by(user_id=current_user.id).all()
-    # last_notified_dates = [for in website = Website.query.first()]
-    # user_websites = website.user_website
-    # for user_website in user_websites:
+
+    websites = [user_website.website for user_website in current_user.user_websites]
     return render_template('index.html', form=form, websites=websites)
 
 
 @app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('homepage'))
@@ -307,6 +338,7 @@ def login():
 
 
 @app.route('/register', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def register():
     is_admin = False
     if current_user.is_authenticated and current_user.is_admin:
@@ -340,6 +372,7 @@ def logout():
 
 @app.route('/admin', methods=['GET', 'POST'])
 @login_required
+@limiter.limit("5 per minute")
 def admin():
     if not current_user.is_admin:
         abort(403)
@@ -369,7 +402,8 @@ def admin():
 def delete_website(id):
     website = Website.query.get_or_404(id)
     if current_user not in website.users:
-        abort(403)
+        flash('You are not authorized to delete this website.')
+        return redirect(url_for('homepage'))
 
     website.users.remove(current_user)
     db.session.commit()
@@ -400,12 +434,12 @@ def update_email():
 
 @app.errorhandler(403)
 def forbidden_error(error):
-    return render_template('errors/403.html', error=error)
+    return render_template('errors/403.html', error=error), 403
 
 
 @app.errorhandler(404)
 def not_found_error(error):
-    return render_template('errors/404.html', error=error)
+    return render_template('errors/404.html', error=error), 404
 
 
 @app.errorhandler(500)
