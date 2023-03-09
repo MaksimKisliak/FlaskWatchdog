@@ -100,5 +100,3 @@ flask db upgrade</code></pre>
  <li><p>Code structure: The current codebase could be refactored to make it more modular and easier to maintain. This could involve breaking up the code into smaller functions or classes, reducing the number of global variables, and improving code readability.</p></li>
 </ol>
  
-</ol>License
-<p>This project is licensed under the MIT License - see the LICENSE file for details.</p>
