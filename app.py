@@ -86,16 +86,29 @@ def load_user(user_id):
 
 
 # Set up logging
+# Check if the application is not in debug mode
 if not app.debug:
+    # Check if logs directory does not exist
     if not os.path.exists('logs'):
+        # Create the logs directory
         os.mkdir('logs')
+
+    # Set up a rotating file handler to handle logs
     file_handler = RotatingFileHandler('logs/FlaskWatchdog.log', maxBytes=10240, backupCount=10)
-    file_handler.setFormatter(
-        logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
+
+    # Set the format of the logs
+    file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
+
+    # Set the level of the logs to INFO
     file_handler.setLevel(logging.INFO)
+
+    # Add the file handler to the application logger
     app.logger.addHandler(file_handler)
 
+    # Set the level of the application logger to INFO
     app.logger.setLevel(logging.INFO)
+
+    # Log a message indicating that the FlaskWatchdog has started up
     app.logger.info('FlaskWatchdog startup')
 
 
@@ -228,6 +241,10 @@ def check_website_status():
 
                 # For each user, update the last notified field in the UserWebsite model
                 for user in users:
+                    # next() is used to find the first item in a list that satisfies a particular condition, allowing
+                    # the code to exit the loop as soon as a match is found. This is more efficient than using a for
+                    # loop to iterate over the entire list, especially for large lists. next() is also used with
+                    # a default value of None to gracefully handle cases where no matching item is found.
                     user_website = next(
                         (user_website for user_website in website.website_users if user_website.user_id == user.id),
                         None)
@@ -239,8 +256,11 @@ def check_website_status():
 
                     # Update the fields in the UserWebsite model
                     if user.has_remaining_notifications():
-                        user.decrement_notifications()
+                        # The delay() method is used to defer the execution of a function or method call to a
+                        # background worker in a task queue, which allows the main application to continue processing
+                        # without blocking.
                         send_email.delay(website.url, status, user.email)
+                        user.decrement_notifications()
                         user_website.last_notified = datetime.utcnow()
                         db.session.commit()
 
