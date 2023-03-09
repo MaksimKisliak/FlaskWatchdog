@@ -91,6 +91,14 @@ flask db upgrade</code></pre>
  <li><p>Update your <code>config.py</code> file to use PostgreSQL as your database by setting the <code>SQLALCHEMY_DATABASE_URI</code> configuration variable to the value of the <code>SQLALCHEMY_DATABASE_URI</code> environment variable.</p></li>
  <li><p>In your <code>requirements.txt</code> file, add the <code>psycopg2-binary</code> library as a dependency.</p></li>
 </ol>
+<h2>Fields for improvement :</h2>
+<ol>
+ <li><p>Security: Although there are some security measures in place such as CSRF protection, password hashing, and rate limiting, there is still room for improvement. For example, implementing two-factor authentication, using secure cookies, and implementing strict access control policies can help improve the security of the application.</p></li>
+ <li><p>Testing: There are currently no unit tests or integration tests for the application. Implementing automated tests can help ensure that the application is functioning correctly and can catch issues early in the development process.</p></li>
+ <li><p>Error handling: The application has error handling for some HTTP error codes, but not all. Adding more comprehensive error handling can help improve the user experience and make it easier to diagnose issues.</p></li>
+ <li><p>Scalability: The current implementation may not be scalable for a large number of users and websites. Implementing techniques such as load balancing, horizontal scaling, and caching can help improve the scalability of the application.</p></li>
+ <li><p>Code structure: The current codebase could be refactored to make it more modular and easier to maintain. This could involve breaking up the code into smaller functions or classes, reducing the number of global variables, and improving code readability.</p></li>
+</ol>
  
 </ol>License
 <p>This project is licensed under the MIT License - see the LICENSE file for details.</p>
