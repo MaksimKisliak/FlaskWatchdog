@@ -4,7 +4,7 @@
 <ul>
   <li>Python 3.7 or higher</li>
   <li>Redis</li>
-  <li>PostgreSQL</li>
+  <li>SQLlite</li>
 </ul>
 <h2>Installation</h2>
 <ol>
@@ -75,20 +75,22 @@ flask db upgrade</code></pre>
  <li><p>To update your email address, click on the "Update Email" link in the navigation bar.</p></li>
  <li><p>To create an admin user, run the following command:</p><pre><span></span><code>flask create-admin <span>--email</span> &lt;admin-email&gt; <span>--password</span> &lt;admin-password&gt;
 </code></pre></li>
+  <li><p>To create a regular user, run the following command:</p><pre><span></span><code>flask <span>create</span><span>-</span><span>user</span> <span>--email &lt;user-email&gt; --password &lt;user-password&gt;</span>
+</code></pre></li>
 </ol>
 <h2> Migration to PostgreSQL database</h2>
 <p>To prepare your Flask app to use PostgreSQL database, you will need to follow these steps:</p>
 <ol>
- <li><p>Install the <code>psycopg2</code> library by running the following command in your terminal:</p><pre><span>php</span>Copy code<code>pip install psycopg2-<span>binary</span>
+ <li><p>Install the <code>psycopg2</code> library by running the following command in your terminal:</p><pre><span></span>
+ <code>pip install psycopg2-<span>binary</span>
 </code></pre></li>
  <li><p>Update your <code>requirements.txt</code> file to include the <code>psycopg2-binary</code> library.</p></li>
  <li><p>Create a PostgreSQL database and user with appropriate permissions. You can do this using the <code>createdb</code> and <code>createuser</code> command-line utilities in PostgreSQL.</p></li>
- <li><p>Set the <code>SQLALCHEMY_DATABASE_URI</code> environment variable to the connection string for your PostgreSQL database. For example:</p><pre><span>bash</span>Copy code<code>postgresql://username:password@localhost/database_name
+ <li><p>Set the <code>SQLALCHEMY_DATABASE_URI</code> environment variable to the connection string for your PostgreSQL database. For example:</p><pre><span>bash</span><code>postgresql://username:password@localhost/database_name
 </code></pre><p>Replace <code>username</code> and <code>password</code> with your PostgreSQL username and password, respectively, and <code>database_name</code> with the name of your PostgreSQL database.</p></li>
  <li><p>Update your <code>config.py</code> file to use PostgreSQL as your database by setting the <code>SQLALCHEMY_DATABASE_URI</code> configuration variable to the value of the <code>SQLALCHEMY_DATABASE_URI</code> environment variable.</p></li>
  <li><p>In your <code>requirements.txt</code> file, add the <code>psycopg2-binary</code> library as a dependency.</p></li>
 </ol>
- <li><p>To create a regular user, run the following command:</p><pre><span></span><code>flask <span>create</span><span>-</span><span>user</span> <span>--email &lt;user-email&gt; --password &lt;user-password&gt;</span>
-</code></pre></li>
+ 
 </ol>License
 <p>This project is licensed under the MIT License - see the LICENSE file for details.</p>
