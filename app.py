@@ -21,7 +21,6 @@ from flask_wtf import FlaskForm
 from flask import current_app
 from urllib.parse import urlparse
 from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 
 # Load environment variables from .env file
 load_dotenv()
@@ -35,7 +34,6 @@ limiter = Limiter(
     app,
     default_limits=["100 per day", "10 per hour"]
 )
-
 
 # Load configuration from environment variables
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
@@ -66,7 +64,7 @@ celery.conf.update(app.config)
 celery.conf.beat_schedule = {
     'check_website_status': {
         'task': 'app.check_website_status',
-        'schedule': crontab(minute='*/1')  # Run every 2 minute
+        'schedule': crontab(minute='*/10')  # Run every 10 minute
     }
 }
 
@@ -143,9 +141,6 @@ class User(UserMixin, db.Model):
     def decrement_notifications(self):
         self._remaining_notifications -= 1
 
-    def num_websites(self):
-        return len(self.user_websites_bref)
-
 
 # Define website model
 class Website(db.Model):
@@ -159,6 +154,7 @@ class Website(db.Model):
 
     def __str__(self):
         return f'<Website id={self.id}, url="{self.url}">'
+
 
 class UserWebsite(db.Model):
     """Model for representing the relationship between a user and a website."""
@@ -232,7 +228,9 @@ def check_website_status():
 
                 # For each user, update the last notified field in the UserWebsite model
                 for user in users:
-                    user_website = next((user_website for user_website in website.website_users if user_website.user_id == user.id), None)
+                    user_website = next(
+                        (user_website for user_website in website.website_users if user_website.user_id == user.id),
+                        None)
 
                     # If there is no previous record for this user-website pair, create a new one
                     if not user_website:
@@ -268,7 +266,7 @@ def check_url_status(url, timeout=10):
 
 @celery.task
 def send_email(website, status, user):
-    print(website, status, user)
+    app.logger.info(f"Preparing e-mail for {website} with status {status} for user {user} at {datetime.utcnow()}")
     subject = 'Website back online' if status else 'Website offline'
     body = 'The website %s is back online' % website \
         if status else 'The website %s is currently down' % website
@@ -276,7 +274,7 @@ def send_email(website, status, user):
     msg = Message(subject, sender=os.environ.get('MAIL_USERNAME'), recipients=[user])
     msg.body = body
     mail.send(msg)
-    print(f'email sent {user}')
+    app.logger.info(f"Sent e-mail for {website} with status {status} for user {user} at {datetime.utcnow()}")
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -400,15 +398,17 @@ def admin():
 @app.route('/delete/<int:id>', methods=['POST'])
 @login_required
 def delete_website(id):
-    website = Website.query.get_or_404(id)
-    if current_user not in website.users:
+    user_website = UserWebsite.query.filter_by(user_id=current_user.id, website_id=id).first()
+
+    if not user_website:
         flash('You are not authorized to delete this website.')
         return redirect(url_for('homepage'))
 
-    website.users.remove(current_user)
+    db.session.delete(user_website)
     db.session.commit()
 
-    if len(website.users) == 0:
+    website = Website.query.get(id)
+    if len(website.website_users) == 0:
         # delete website if no users left
         db.session.delete(website)
         db.session.commit()
