@@ -1,5 +1,22 @@
 # FlaskWatchdog
 <p>FlaskWatchdog is a website monitoring tool built with Flask, Celery, and SQLAlchemy. It allows users to add websites they want to monitor and receive email notifications when a website goes down or comes back online. The application also features rate limiting, logging, and user authentication with different levels of privileges.</p>
+
+        ┌───────────┐         ┌───────────────┐
+        │   User    │         │     Redis     │
+        └───────────┘         └───────────────┘
+              │                       ▲
+              │                       │
+              ▼                       │
+        ┌───────────┐                 │
+        │UserWebsite│     ┌───────────┐
+        └───────────┘     │   Celery  │
+              │           └───────────┘
+              │                 │     
+              ▼                 │     
+        ┌───────────┐           │     
+        │  Website  │◄──────────┘     
+        └───────────┘                 
+<ul><li>Users have a one-to-many relationship with UserWebsite objects</li><li>Websites have a many-to-many relationship with UserWebsite objects</li><li>Redis is used as a message broker to manage Celery tasks</li><li>Celery is used to periodically check the status of websites and send email notifications to users when a website goes offline or comes back online.</li></ul>
 <h2>Requirements</h2>
 <ul>
   <li>Python 3.7 or higher</li>
