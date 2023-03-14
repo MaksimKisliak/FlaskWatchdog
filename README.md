@@ -62,7 +62,7 @@ flask db upgrade</code></pre>
   </li>
   <li>
     <p>Start the redis server:</p>
-    <pre><code>celery -A app.celery redis-server</code></pre>
+    <pre><code>redis-server</code></pre>
   </li>
   <li>
     <p>Start the Celery worker:</p>
