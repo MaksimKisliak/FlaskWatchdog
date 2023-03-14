@@ -16,6 +16,8 @@ class Config:
     MAIL_USE_TLS = False
     MAIL_USE_SSL = True
     RATELIMIT_MESSAGE = 'Chill out, man!'
+    LIMITER_STORAGE_URL = os.environ.get('LIMITER_STORAGE_URL', 'redis://localhost:6379')
+
 
     @staticmethod
     def init_app(app):

@@ -8,23 +8,22 @@ from app.models.website import Website
 from app.models.userwebsite import UserWebsite
 from flask import render_template, redirect, url_for, flash
 from flask_login import login_required, current_user
-from app.extensions import limiter, db, celery, mail
+from app.extensions import limiter, db, mail
 from app.forms import WebsiteForm
 from app.main import main_bp
-from app import create_app
+from app import celery
 
-app = create_app()
 
 @celery.task
 def check_website_status():
     with current_app.app_context():
-        app.logger.info(f"Checking website status at {datetime.utcnow()}")
+        current_app.logger.info(f"Checking website status at {datetime.utcnow()}")
         websites = Website.query.all()
 
         for website in websites:
-            app.logger.info(f"Checking website status for {website.url} at {datetime.utcnow()}")
+            current_app.logger.info(f"Checking website status for {website.url} at {datetime.utcnow()}")
             status = check_url_status(website.url)
-            app.logger.info(f"Website status for {website.url} at {datetime.utcnow()} is {status}")
+            current_app.logger.info(f"Website status for {website.url} at {datetime.utcnow()} is {status}")
 
             # Update the last checked field in the website model
             website.last_checked = datetime.utcnow()
@@ -74,18 +73,19 @@ def check_url_status(url, timeout=10):
     session = requests.Session()
     session.headers.update(headers)
     try:
-        app.logger.info(f"Requesting website status for {url} at {datetime.utcnow()}")
+        current_app.logger.info(f"Requesting website status for {url} at {datetime.utcnow()}")
         response = session.get(url, timeout=timeout)
-        app.logger.info(f"Status code for {url} is {response.status_code} at {datetime.utcnow()}")
+        current_app.logger.info(f"Status code for {url} is {response.status_code} at {datetime.utcnow()}")
         return response.status_code == 200
     except requests.exceptions.RequestException as e:
-        app.logger.error(f'Request failed for website {url}: {str(e)}')
+        current_app.logger.error(f'Request failed for website {url}: {str(e)}')
         return False
 
 
 @celery.task
 def send_email(website, status, user):
-    app.logger.info(f"Preparing e-mail for {website} with status {status} for user {user} at {datetime.utcnow()}")
+    current_app.logger.info(
+        f"Preparing e-mail for {website} with status {status} for user {user} at {datetime.utcnow()}")
     subject = 'Website back online' if status else 'Website offline'
     body = 'The website %s is back online' % website \
         if status else 'The website %s is currently down' % website
@@ -93,7 +93,7 @@ def send_email(website, status, user):
     msg = Message(subject, sender=os.environ.get('MAIL_USERNAME'), recipients=[user])
     msg.body = body
     mail.send(msg)
-    app.logger.info(f"Sent e-mail for {website} with status {status} for user {user} at {datetime.utcnow()}")
+    current_app.logger.info(f"Sent e-mail for {website} with status {status} for user {user} at {datetime.utcnow()}")
 
 
 @main_bp.route('/', methods=['GET', 'POST'])
@@ -131,6 +131,7 @@ def homepage():
 
     websites = [user_website.website for user_website in current_user.user_websites]
     return render_template('index.html', form=form, websites=websites)
+
 
 @main_bp.route('/delete/<int:id>', methods=['POST'])
 @login_required

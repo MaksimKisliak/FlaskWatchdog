@@ -1,32 +1,27 @@
-from app.extensions import db, cli
 import click
-import os
+from app.extensions import db
 from app.models.user import User
-from app.main.routes import check_website_status
+from app.main.routes import check_website_status, send_email
+from flask.cli import FlaskGroup
 
+cli = FlaskGroup()
 
-
-@cli.command('init-db')
-def init_db():
-    db.create_all()
-    click.echo('Database initialized')
+@click.group()
+def cli():
+    pass
 
 
 @cli.command('check-status')
 def check_status():
-    check_website_status()
+    check_website_status.apply_async()
     click.echo('Website status checked')
 
 
-@cli.command('clear-logs')
-def clear_logs():
-    """Clear all log files."""
-    if os.path.exists('logs'):
-        for filename in os.listdir('logs'):
-            os.remove(os.path.join('logs', filename))
-        click.echo('Logs cleared')
-    else:
-        click.echo('No logs to clear')
+@cli.command('send-test-email')
+@click.option('--email', prompt=True, help='The email address to send the test email to')
+def send_test_email(email):
+    send_email.apply_async(args=['Test Website', True, email])
+    click.echo('Test email sent')
 
 
 @cli.command('create-admin')
@@ -59,7 +54,3 @@ def create_user(email, password):
         db.session.add(user)
         db.session.commit()
         click.echo('User created successfully')
-
-
-if __name__ == '__main__':
-    cli()

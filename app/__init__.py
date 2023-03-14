@@ -1,13 +1,16 @@
 from flask import Flask
 from flask_login import LoginManager
-
-from app.extensions import mail, csrf, login_manager, celery, limiter, db, migrate
+from app.extensions import mail, csrf, limiter, db, migrate, cli
 from celery.schedules import crontab
 from celery import Celery
 import os
 from dotenv import load_dotenv
 import logging
 from logging.handlers import RotatingFileHandler
+from app.cli import cli
+
+
+celery = Celery(__name__, broker=os.environ.get('CELERY_BROKER_URL'), backend=os.environ.get('CELERY_RESULT_BACKEND'))
 
 
 def create_app(config_class=None):
@@ -23,12 +26,11 @@ def create_app(config_class=None):
     app.config.from_object(config_class)
 
     # Set up Celery
-    celery = Celery(app.name, broker=os.environ.get('CELERY_BROKER_URL'),
-                    backend=os.environ.get('CELERY_RESULT_BACKEND'))
+    app.celery = celery
     celery.conf.update(app.config)
     celery.conf.beat_schedule = {
         'check_website_status': {
-            'task': 'app.tasks.check_website_status',
+            'task': 'app.main.routes.check_website_status',
             'schedule': crontab(minute='*/10')  # Run every 10 minutes
         }
     }
@@ -56,7 +58,6 @@ def create_app(config_class=None):
     def load_user(user_id):
         return User.query.get(int(user_id))
 
-
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
@@ -64,17 +65,22 @@ def create_app(config_class=None):
     csrf.init_app(app)
     login_manager.init_app(app)
     limiter.init_app(app)
-
+    # cli.init_app(app)
 
     # Register blueprints
-    from app.auth import auth_bp
-    from app.cli import cli_bp
     from app.main import main_bp
-    from app.errors import errors_bp
-
     app.register_blueprint(main_bp)
+
+    from app.auth import auth_bp
     app.register_blueprint(auth_bp)
+
+    from app.errors import errors_bp
     app.register_blueprint(errors_bp)
-    app.register_blueprint(cli_bp)
+
+    # Register custom commands
+    cli.register_command(check_status)
+    cli.register_command(send_test_email)
+    cli.register_command(create_admin)
+    cli.register_command(create_user)
 
     return app
