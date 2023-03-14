@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+    {% if current_user.is_authenticated %}
+        <h4>Logged in as: {{ current_user.email }}</h4>
+    {% endif %}
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6">
+                <h2>Add Website</h2>
+                <form method="post" action="{{ url_for('main/homepage') }}" class="form">
+                    {{ form.hidden_tag() }}
+                    <div class="form-group">
+                        {{ form.url.label(class="form-control-label") }}
+                        {{ form.url(class="form-control", placeholder="e.g. https://www.google.com or https://example.com/") }}
+                        {% for error in form.url.errors %}
+                            <span class="form-error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    <br>
+                    <button type="submit" class="btn btn-primary">Add Website</button>
+                </form>
+            </div>
+            <div class="col-lg-6">
+                <h2>My Websites</h2>
+                {% if websites %}
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>URL</th>
+                            <th>Status</th>
+                            <th>Last Checked</th>
+                            <th>Last Notified</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for website in websites %}
+                            <tr>
+                                <td>{{ website.url }}</td>
+                                <td>
+                                    {% if website.status %}
+                                        <span class="label label-success">Online</span>
+                                    {% else %}
+                                        <span class="label label-danger">Offline</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ website.last_checked.strftime('%Y-%m-%d %H:%M:%S') if website.last_checked else '-' }}</td>
+                                <td>
+                                    {% for user_website in current_user.user_websites %}
+                                        {% if user_website.website_id == website.id %}
+                                            {{ user_website.last_notified.strftime('%Y-%m-%d %H:%M:%S') if user_website.last_notified else '-' }}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    <form method="post" action="{{ url_for('main/delete_website', id=website.id) }}"
+                                          onsubmit="return confirm('Are you sure you want to delete this website?');">
+                                        {{ form.hidden_tag() }}
+                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>No websites added yet.</p>
+                {% endif %}
+                <p>Remaining Notifications: {{ current_user.remaining_notifications }}</p>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
