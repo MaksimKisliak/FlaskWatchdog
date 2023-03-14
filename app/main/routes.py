@@ -11,10 +11,9 @@ from flask_login import login_required, current_user
 from app.extensions import limiter, db, mail
 from app.forms import WebsiteForm
 from app.main import main_bp
-from app import celery
 
 
-@celery.task
+@current_app.celery.task
 def check_website_status():
     with current_app.app_context():
         current_app.logger.info(f"Checking website status at {datetime.utcnow()}")
@@ -57,7 +56,7 @@ def check_website_status():
                         # The delay() method is used to defer the execution of a function or method call to a
                         # background worker in a task queue, which allows the main application to continue processing
                         # without blocking.
-                        send_email.delay(website.url, status, user.email)
+                        current_app.celery.send_email.delay(website.url, status, user.email)
                         user.decrement_notifications()
                         user_website.last_notified = datetime.utcnow()
                         db.session.commit()
@@ -82,7 +81,7 @@ def check_url_status(url, timeout=10):
         return False
 
 
-@celery.task
+@current_app.celery.task
 def send_email(website, status, user):
     current_app.logger.info(
         f"Preparing e-mail for {website} with status {status} for user {user} at {datetime.utcnow()}")

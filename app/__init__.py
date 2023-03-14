@@ -7,8 +7,7 @@ import os
 from dotenv import load_dotenv
 import logging
 from logging.handlers import RotatingFileHandler
-from app.cli import cli
-
+from app.cli import cli, check_status, send_test_email, create_admin, create_user
 
 celery = Celery(__name__, broker=os.environ.get('CELERY_BROKER_URL'), backend=os.environ.get('CELERY_RESULT_BACKEND'))
 
