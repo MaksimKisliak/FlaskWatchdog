@@ -103,7 +103,7 @@ flask db upgrade</code></pre>
 </code></pre></li>
  <li><p>Update your <code>requirements.txt</code> file to include the <code>psycopg2-binary</code> library.</p></li>
  <li><p>Create a PostgreSQL database and user with appropriate permissions. You can do this using the <code>createdb</code> and <code>createuser</code> command-line utilities in PostgreSQL.</p></li>
- <li><p>Set the <code>SQLALCHEMY_DATABASE_URI</code> environment variable to the connection string for your PostgreSQL database. For example:</p><pre><span>bash</span><code>postgresql://username:password@localhost/database_name
+ <li><p>Set the <code>SQLALCHEMY_DATABASE_URI</code> environment variable to the connection string for your PostgreSQL database. For example:</p><pre><span></span><code>postgresql://username:password@localhost/database_name
 </code></pre><p>Replace <code>username</code> and <code>password</code> with your PostgreSQL username and password, respectively, and <code>database_name</code> with the name of your PostgreSQL database.</p></li>
  <li><p>Update your <code>config.py</code> file to use PostgreSQL as your database by setting the <code>SQLALCHEMY_DATABASE_URI</code> configuration variable to the value of the <code>SQLALCHEMY_DATABASE_URI</code> environment variable.</p></li>
  <li><p>In your <code>requirements.txt</code> file, add the <code>psycopg2-binary</code> library as a dependency.</p></li>
