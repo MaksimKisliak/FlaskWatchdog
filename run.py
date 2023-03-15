@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import os
-from app import create_app, cli, ext_celery
+from app import create_app, cli
+from app.extensions import ext_celery
 
 
 # Load environment variables from .env file
