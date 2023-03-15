@@ -6,10 +6,6 @@ from flask.cli import FlaskGroup
 
 cli = FlaskGroup()
 
-@click.group()
-def cli():
-    pass
-
 
 @cli.command('check-status')
 def check_status():
@@ -54,3 +50,7 @@ def create_user(email, password):
         db.session.add(user)
         db.session.commit()
         click.echo('User created successfully')
+
+
+if __name__ == '__main__':
+    cli()

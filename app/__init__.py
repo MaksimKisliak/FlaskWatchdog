@@ -1,15 +1,13 @@
 from flask import Flask
 from flask_login import LoginManager
-from app.extensions import mail, csrf, limiter, db, migrate, cli
-from celery.schedules import crontab
-from celery import Celery
+from app.extensions import mail, csrf, limiter, db, migrate, ext_celery
 import os
 from dotenv import load_dotenv
 import logging
 from logging.handlers import RotatingFileHandler
-from app.cli import cli, check_status, send_test_email, create_admin, create_user
+from app.cli import check_status, send_test_email, create_admin, create_user
+from celery.schedules import crontab
 
-celery = Celery(__name__, broker=os.environ.get('CELERY_BROKER_URL'), backend=os.environ.get('CELERY_RESULT_BACKEND'))
 
 
 def create_app(config_class=None):
@@ -21,31 +19,8 @@ def create_app(config_class=None):
 
     # Re-load configuration options from environment variables
     if config_class is None:
-        config_class = os.environ.get('APP_SETTINGS')
+        config_class = os.environ.get('FLASK_CONFIG')
     app.config.from_object(config_class)
-
-    # Set up Celery
-    app.celery = celery
-    celery.conf.update(app.config)
-    celery.conf.beat_schedule = {
-        'check_website_status': {
-            'task': 'app.main.routes.check_website_status',
-            'schedule': crontab(minute='*/10')  # Run every 10 minutes
-        }
-    }
-
-    # Set up logging
-    if not app.debug:
-        if not os.path.exists('logs'):
-            os.mkdir('logs')
-
-        file_handler = RotatingFileHandler('logs/flask_app.log', maxBytes=10240, backupCount=10)
-        file_handler.setFormatter(
-            logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
-        file_handler.setLevel(logging.INFO)
-        app.logger.addHandler(file_handler)
-        app.logger.setLevel(logging.INFO)
-        app.logger.info('Flask App startup')
 
     # Initialize Flask-Login
     login_manager = LoginManager(app)
@@ -64,7 +39,27 @@ def create_app(config_class=None):
     csrf.init_app(app)
     login_manager.init_app(app)
     limiter.init_app(app)
-    # cli.init_app(app)
+    ext_celery.init_app(app)
+
+    ext_celery.celery.conf.beat_schedule = {
+        'check_website_status': {
+            'task': 'app.main.routes.check_website_status',
+            'schedule': crontab(minute='*/1')  # Run every 10 minute
+        }
+    }
+
+    # Set up logging
+    if not app.debug:
+        if not os.path.exists('logs'):
+            os.mkdir('logs')
+
+        file_handler = RotatingFileHandler('logs/flask_app.log', maxBytes=10240, backupCount=10)
+        file_handler.setFormatter(
+            logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
+        file_handler.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
+        app.logger.setLevel(logging.INFO)
+        app.logger.info('Flask App startup')
 
     # Register blueprints
     from app.main import main_bp
@@ -77,9 +72,16 @@ def create_app(config_class=None):
     app.register_blueprint(errors_bp)
 
     # Register custom commands
-    cli.register_command(check_status)
-    cli.register_command(send_test_email)
-    cli.register_command(create_admin)
-    cli.register_command(create_user)
+    app.cli.add_command(check_status)
+    app.cli.add_command(send_test_email)
+    app.cli.add_command(create_admin)
+    app.cli.add_command(create_user)
+
+    # shell context for flask cli
+    # Curious as to why we dont have to import db via from app import db in Flask shell? We added it to the
+    # shell context with shell_context_processor in the create_app function.
+    @app.shell_context_processor
+    def ctx():
+        return {"app": app, "db": db}
 
     return app

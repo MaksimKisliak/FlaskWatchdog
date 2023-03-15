@@ -1,11 +1,12 @@
+from celery import shared_task
 from flask_mail import Message
 import requests
 from datetime import datetime
 import os
 from flask import current_app
 from urllib.parse import urlparse
-from app.models.website import Website
 from app.models.userwebsite import UserWebsite
+from app.models.website import Website
 from flask import render_template, redirect, url_for, flash
 from flask_login import login_required, current_user
 from app.extensions import limiter, db, mail
@@ -13,9 +14,9 @@ from app.forms import WebsiteForm
 from app.main import main_bp
 
 
-@current_app.celery.task
-def check_website_status():
-    with current_app.app_context():
+@shared_task(ignore_result=False)
+def check_website_status(app):
+    with app.app_context():
         current_app.logger.info(f"Checking website status at {datetime.utcnow()}")
         websites = Website.query.all()
 
@@ -56,7 +57,7 @@ def check_website_status():
                         # The delay() method is used to defer the execution of a function or method call to a
                         # background worker in a task queue, which allows the main application to continue processing
                         # without blocking.
-                        current_app.celery.send_email.delay(website.url, status, user.email)
+                        send_email.delay(website.url, status, user.email)
                         user.decrement_notifications()
                         user_website.last_notified = datetime.utcnow()
                         db.session.commit()
@@ -81,7 +82,6 @@ def check_url_status(url, timeout=10):
         return False
 
 
-@current_app.celery.task
 def send_email(website, status, user):
     current_app.logger.info(
         f"Preparing e-mail for {website} with status {status} for user {user} at {datetime.utcnow()}")
@@ -97,7 +97,7 @@ def send_email(website, status, user):
 
 @main_bp.route('/', methods=['GET', 'POST'])
 @login_required
-@limiter.limit("5 per minute")
+@limiter.limit("100 per minute")
 def homepage():
     form = WebsiteForm()
     if form.validate_on_submit():
@@ -114,7 +114,7 @@ def homepage():
                 db.session.add(user_website)
                 db.session.commit()
             flash('Website added successfully.')
-            return redirect(url_for('homepage'))
+            return redirect(url_for('main.homepage'))
         else:
             # add new website to db and add current user to its users
             website = Website(url=domain_name)
@@ -126,7 +126,7 @@ def homepage():
             db.session.commit()
 
             flash('Website added successfully.')
-            return redirect(url_for('homepage'))
+            return redirect(url_for('main.homepage'))
 
     websites = [user_website.website for user_website in current_user.user_websites]
     return render_template('index.html', form=form, websites=websites)
@@ -151,4 +151,4 @@ def delete_website(id):
         db.session.commit()
 
     flash('Website deleted successfully.')
-    return redirect(url_for('homepage'))
+    return redirect(url_for('main.homepage'))

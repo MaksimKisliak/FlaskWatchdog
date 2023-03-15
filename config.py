@@ -17,6 +17,9 @@ class Config:
     MAIL_USE_SSL = True
     RATELIMIT_MESSAGE = 'Chill out, man!'
     LIMITER_STORAGE_URL = os.environ.get('LIMITER_STORAGE_URL', 'redis://localhost:6379')
+    TESTING = False
+    CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://127.0.0.1:6379/0")
+    result_backend = os.environ.get("CELERY_RESULT_BACKEND", "redis://127.0.0.1:6379/0")
 
 
     @staticmethod
@@ -26,16 +29,17 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URI')
 
 
 class TestingConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URI')
 
 
 class ProductionConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI')
+    DEBUG = False
 
 
 config = {

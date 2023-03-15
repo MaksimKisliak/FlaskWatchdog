@@ -1,8 +1,6 @@
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
-
+from app.extensions import db
 
 class UserWebsite(db.Model):
     """Model for representing the relationship between a user and a website."""

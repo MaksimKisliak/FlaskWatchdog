@@ -7,10 +7,10 @@ from app.auth import auth_bp
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")
+@limiter.limit("100 per minute")
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('homepage'))
+        return redirect(url_for('main.homepage'))
 
     form = LoginForm()
     if form.validate_on_submit():
@@ -19,16 +19,16 @@ def login():
         user = User.query.filter_by(email=email).first()
         if user and user.check_password(password):
             login_user(user)
-            return redirect(url_for('homepage'))
+            return redirect(url_for('main.homepage'))
         else:
             flash('Invalid email or password')
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('login'))
 
     return render_template('auth/login.html', form=form)
 
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")
+@limiter.limit("100 per minute")
 def register():
     is_admin = False
     if current_user.is_authenticated and current_user.is_admin:
@@ -48,7 +48,7 @@ def register():
             db.session.add(user)
             db.session.commit()
             login_user(user)
-            return redirect(url_for('homepage'))
+            return redirect(url_for('main.homepage'))
 
     return render_template('auth/register.html', is_admin=is_admin, form=form)
 
@@ -57,12 +57,12 @@ def register():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('homepage'))
+    return redirect(url_for('main.homepage'))
 
 
 @auth_bp.route('/admin', methods=['GET', 'POST'])
 @login_required
-@limiter.limit("5 per minute")
+@limiter.limit("100 per minute")
 def admin():
     if not current_user.is_admin:
         abort(403)
@@ -95,7 +95,7 @@ def update_email():
             current_user.email = form.email.data
             db.session.commit()
             flash('Your email has been updated.', 'success')
-            return redirect(url_for('homepage'))
+            return redirect(url_for('main.homepage'))
         else:
             flash('Invalid password.', 'danger')
     return render_template('auth/update_email.html', form=form)
