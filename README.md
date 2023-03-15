@@ -62,6 +62,7 @@ flask db upgrade</code></pre>
   </li>
   <li>
     <p>Start the redis server:</p>
+<<<<<<< HEAD
     <pre><code>celery -A app.celery redis-server</code></pre>
   </li>
   <li>
@@ -71,6 +72,17 @@ flask db upgrade</code></pre>
   <li>
     <p>Start the Celery beat scheduler:</p>
     <pre><code>celery -A app.celery celery -A app.celery beat --loglevel=INFO</code></pre>
+=======
+    <pre><code>redis-server</code></pre>
+  </li>
+  <li>
+    <p>Start the Celery worker:</p>
+    <pre><code>-A app.celery worker --loglevel=INFO </code></pre>
+  </li>
+  <li>
+    <p>Start the Celery beat scheduler:</p>
+    <pre><code>celery -A app.celery beat --loglevel=INFO</code></pre>
+>>>>>>> origin/main
   </li>
 </ol>
 <h2>Usage</h2>
