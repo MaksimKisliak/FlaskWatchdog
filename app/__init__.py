@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 import logging
 from logging.handlers import RotatingFileHandler
-from app.cli import check_status, send_test_email, create_admin, create_user
+from app.cli import check_status, send_test_email, create_admin, create_user, list_users, list_websites, list_user_websites
 from celery.schedules import crontab
 
 
@@ -62,12 +62,15 @@ def create_app(config_class=None):
         app.logger.info('Flask App startup')
 
     # Register blueprints
+    print("Registering main blueprint")
     from app.main import main_bp
     app.register_blueprint(main_bp)
 
+    print("Registering auth blueprint")
     from app.auth import auth_bp
     app.register_blueprint(auth_bp)
 
+    print("Registering errors blueprint")
     from app.errors import errors_bp
     app.register_blueprint(errors_bp)
 
@@ -76,6 +79,9 @@ def create_app(config_class=None):
     app.cli.add_command(send_test_email)
     app.cli.add_command(create_admin)
     app.cli.add_command(create_user)
+    app.cli.add_command(list_users)
+    app.cli.add_command(list_websites)
+    app.cli.add_command(list_user_websites)
 
     # shell context for flask cli
     # Curious as to why we dont have to import db via from app import db in Flask shell? We added it to the

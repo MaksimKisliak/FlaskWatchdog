@@ -1,6 +1,7 @@
 from app.extensions import db
 from flask import render_template
-from app.errors import errors_bp
+from . import errors_bp
+
 
 @errors_bp.errorhandler(403)
 def forbidden_error(error):
@@ -9,7 +10,7 @@ def forbidden_error(error):
 
 @errors_bp.errorhandler(404)
 def not_found_error(error):
-    return render_template('errors/404.html', error=error), 404
+    return render_template('errors.404.html', error=error), 404
 
 
 @errors_bp.errorhandler(500)

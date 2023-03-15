@@ -62,16 +62,17 @@ def logout():
 
 @auth_bp.route('/admin', methods=['GET', 'POST'])
 @login_required
-@limiter.limit("100 per minute")
 def admin():
     if not current_user.is_admin:
         abort(403)
 
     form = AdminUserForm()
+
     if form.validate_on_submit():
         email = form.email.data
         password = form.password.data
         user_exists = User.query.filter_by(email=email).first()
+
         if user_exists:
             flash('An account already exists with that email')
         else:
@@ -81,13 +82,15 @@ def admin():
             db.session.add(user)
             db.session.commit()
             flash('User added successfully')
-        return redirect(url_for('auth.admin'))
+            return redirect(url_for('auth.admin'))
 
     users = User.query.all()
     return render_template('auth/admin.html', users=users, form=form)
 
+
 @auth_bp.route('/update_email', methods=['GET', 'POST'])
 @login_required
+@limiter.limit("100 per minute")
 def update_email():
     form = UpdateEmailForm()
     if form.validate_on_submit():
