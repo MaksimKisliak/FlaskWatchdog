@@ -16,7 +16,7 @@ def check_status():
 @cli.command('send-test-email')
 @click.option('--email', prompt=True, help='The email address to send the test email to')
 def send_test_email(email):
-    send_email.apply_async(args=['Test Website', True, email])
+    send_email(args=['Test Website', True, email])
     click.echo('Test email sent')
 
 
