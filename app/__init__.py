@@ -5,7 +5,8 @@ import os
 from dotenv import load_dotenv
 import logging
 from logging.handlers import RotatingFileHandler
-from app.cli import check_status, send_test_email, create_admin, create_user, list_users, list_websites, list_user_websites
+from app.cli import check_status, send_test_email, create_admin, create_user, list_users, list_websites,\
+    list_user_websites, create_website
 from celery.schedules import crontab
 
 
@@ -44,7 +45,7 @@ def create_app(config_class=None):
     ext_celery.celery.conf.beat_schedule = {
         'check_website_status': {
             'task': 'app.main.routes.check_website_status',
-            'schedule': crontab(minute='*/1')  # Run every 10 minute
+            'schedule': crontab(minute='*/10')  # Run every 10 minute
         }
     }
 
@@ -53,26 +54,13 @@ def create_app(config_class=None):
         if not os.path.exists('logs'):
             os.mkdir('logs')
 
-        file_handler = RotatingFileHandler('logs/flask_app.log', maxBytes=10240, backupCount=10)
+        file_handler = RotatingFileHandler('logs/FlaskWatchdog.log', maxBytes=10240, backupCount=10)
         file_handler.setFormatter(
             logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
         file_handler.setLevel(logging.INFO)
         app.logger.addHandler(file_handler)
         app.logger.setLevel(logging.INFO)
-        app.logger.info('Flask App startup')
-
-    # Register blueprints
-    print("Registering main blueprint")
-    from app.main import main_bp
-    app.register_blueprint(main_bp)
-
-    print("Registering auth blueprint")
-    from app.auth import auth_bp
-    app.register_blueprint(auth_bp)
-
-    print("Registering errors blueprint")
-    from app.errors import errors_bp
-    app.register_blueprint(errors_bp)
+        app.logger.info('FlaskWatchdog')
 
     # Register custom commands
     app.cli.add_command(check_status)
@@ -82,6 +70,20 @@ def create_app(config_class=None):
     app.cli.add_command(list_users)
     app.cli.add_command(list_websites)
     app.cli.add_command(list_user_websites)
+    app.cli.add_command(create_website)
+
+    # Register blueprints
+    print("Registering errors blueprint")
+    from app.errors import errors_bp
+    app.register_blueprint(errors_bp)
+
+    print("Registering main blueprint")
+    from app.main import main_bp
+    app.register_blueprint(main_bp)
+
+    print("Registering auth blueprint")
+    from app.auth import auth_bp
+    app.register_blueprint(auth_bp)
 
     # shell context for flask cli
     # Curious as to why we dont have to import db via from app import db in Flask shell? We added it to the

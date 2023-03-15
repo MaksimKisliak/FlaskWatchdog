@@ -57,3 +57,5 @@ wcwidth==0.2.6
 Werkzeug==2.2.3
 wrapt==1.15.0
 WTForms==3.0.1
+
+pytest~=7.2.2

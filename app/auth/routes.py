@@ -1,9 +1,13 @@
+from datetime import datetime
+
 from flask import render_template, redirect, url_for, flash, abort
 from flask_login import login_user, login_required, logout_user, current_user
 from app.extensions import limiter, db
 from app.models.user import User
 from app.forms import LoginForm, RegisterForm, AdminUserForm, UpdateEmailForm
 from app.auth import auth_bp
+from app.models.userwebsite import UserWebsite
+from app.models.website import Website
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -18,11 +22,13 @@ def login():
         password = form.password.data
         user = User.query.filter_by(email=email).first()
         if user and user.check_password(password):
+            user.last_login = datetime.utcnow()  # Update the last_login timestamp
+            db.session.commit()  # Commit the changes
             login_user(user)
             return redirect(url_for('main.homepage'))
         else:
             flash('Invalid email or password')
-            return redirect(url_for('login'))
+            return redirect(url_for('auth.login'))
 
     return render_template('auth/login.html', form=form)
 
@@ -48,6 +54,8 @@ def register():
             db.session.add(user)
             db.session.commit()
             login_user(user)
+            user.last_login = datetime.utcnow()  # Update the last_login timestamp
+            db.session.commit()  # Commit the changes
             return redirect(url_for('main.homepage'))
 
     return render_template('auth/register.html', is_admin=is_admin, form=form)
@@ -85,7 +93,9 @@ def admin():
             return redirect(url_for('auth.admin'))
 
     users = User.query.all()
-    return render_template('auth/admin.html', users=users, form=form)
+    websites = Website.query.all()
+    user_websites = UserWebsite.query.all()
+    return render_template('auth/admin.html', users=users, websites=websites, user_websites=user_websites, form=form)
 
 
 @auth_bp.route('/update_email', methods=['GET', 'POST'])

@@ -2,36 +2,93 @@
 
 {% block title %}Admin{% endblock %}
 
+{% block styles %}
+    <style>
+        .table-container {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 1s ease forwards, slideIn 1s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            100% {
+                transform: translateY(0);
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#userSearch').on('keyup', function () {
+                let value = $(this).val().toLowerCase();
+                filterTableRows('#usersTable tbody tr', value);
+            });
+
+            $('#websiteSearch').on('keyup', function () {
+                let value = $(this).val().toLowerCase();
+                filterTableRows('#websitesTable tbody tr', value);
+            });
+
+            $('#userWebsiteSearch').on('keyup', function () {
+                let value = $(this).val().toLowerCase();
+                filterTableRows('#userWebsitesTable tbody tr', value);
+            });
+
+            function filterTableRows(rowsSelector, value) {
+                $(rowsSelector).filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            }
+        });
+    </script>
+{% endblock %}
+
 {% block content %}
-    <div class="container">
-        <h1 class="mt-5">Admin</h1>
-        <div class="row">
-            <div class="col-md-6">
-                <h2>Add User</h2>
-                <form method="POST" action="{{ url_for('auth.admin') }}">
-                    {{ form.csrf_token }}
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        {{ form.email(class="form-control") }}
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        {{ form.password(class="form-control") }}
-                    </div>
-                    <div class="form-group form-check">
-                        {{ form.is_admin(class="form-check-input") }}
-                        <label class="form-check-label" for="is_admin">Is Admin?</label>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Submit</button>
-                </form>
-            </div>
-            <div class="col-md-6">
-                <h2>Users</h2>
-                <table class="table table-striped">
+    <h1 class="mt-5">Admin</h1>
+    <div class="row">
+        <div class="col-md-6">
+            <h2>Add User</h2>
+            <form method="POST" action="{{ url_for('auth.admin') }}">
+                {{ form.csrf_token }}
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    {{ form.email(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    {{ form.password(class="form-control") }}
+                </div>
+                <div class="form-group form-check">
+                    {{ form.is_admin(class="form-check-input") }}
+                    <label class="form-check-label" for="is_admin">Is Admin?</label>
+                </div>
+                <br>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Users table -->
+            <h2>Users</h2>
+            <input type="text" id="userSearch" placeholder="Search Users" class="form-control mb-3">
+            <div class="table-container">
+                <table class="table table-striped" id="usersTable">
                     <thead>
                     <tr>
                         <th>Email</th>
                         <th>Is Admin</th>
+                        <th>Last Login</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -39,6 +96,66 @@
                         <tr>
                             <td>{{ user.email }}</td>
                             <td>{{ "Yes" if user.is_admin else "No" }}</td>
+                            <td>{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else '-' }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <!-- Websites table -->
+        <div class="col-md-6">
+            <h2>Websites</h2>
+            <input type="text" id="websiteSearch" placeholder="Search Websites" class="form-control mb-3">
+            <div class="table-container">
+                <table class="table table-striped" id="websitesTable">
+                    <thead>
+                    <tr>
+                        <th>URL</th>
+                        <th>Status</th>
+                        <th>Last Checked</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for website in websites %}
+                        <tr>
+                            <td>{{ website.url }}</td>
+                            <td>{{ "Up" if website.status else "Down" }}</td>
+                            <td>{{ website.last_checked.strftime('%Y-%m-%d %H:%M') if website.last_checked else '-' }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <!-- UserWebsite table -->
+        <div class="col-md-6">
+            <h2>User-Website Relationships</h2>
+            <input type="text" id="userWebsiteSearch" placeholder="Search User-Website Relationships"
+                   class="form-control mb-3">
+            <div class="table-container">
+                <table class="table table-striped" id="userWebsitesTable">
+                    <thead>
+                    <tr>
+                        <th>User Email</th>
+                        <th>Website URL</th>
+                        <th>Created At</th>
+                        <th>Last Notification</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for user_website in user_websites %}
+                        <tr>
+                            <td>{{ user_website.user.email }}</td>
+                            <td>{{ user_website.website.url }}</td>
+                            <td>{{ user_website.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ user_website.last_notified.strftime('%Y-%m-%d %H:%M') if user_website.last_notified else '-' }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
