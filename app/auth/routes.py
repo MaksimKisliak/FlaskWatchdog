@@ -91,11 +91,18 @@ def admin():
 def update_email():
     form = UpdateEmailForm()
     if form.validate_on_submit():
-        if current_user.check_password(form.password.data):
-            current_user.email = form.email.data
-            db.session.commit()
-            flash('Your email has been updated.', 'success')
-            return redirect(url_for('main.homepage'))
+        email = form.email.data
+        user_exists = User.query.filter_by(email=email).first()
+        if user_exists:
+            flash('Email provided already exists.', 'danger')
+            return redirect(url_for('auth.update_email'))
         else:
-            flash('Invalid password.', 'danger')
+            if current_user.check_password(form.password.data):
+                current_user.email = form.email.data
+                db.session.commit()
+                flash('Your email has been updated.', 'success')
+                return redirect(url_for('main.homepage'))
+            else:
+                flash('Invalid password.', 'danger')
+                return redirect(url_for('auth.update_email'))
     return render_template('auth/update_email.html', form=form)

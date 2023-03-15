@@ -1,9 +1,7 @@
-from celery import shared_task
 from flask_mail import Message
 import requests
 from datetime import datetime
 import os
-from flask import current_app
 from urllib.parse import urlparse
 from app.models.userwebsite import UserWebsite
 from app.models.website import Website
@@ -12,11 +10,18 @@ from flask_login import login_required, current_user
 from app.extensions import limiter, db, mail
 from app.forms import WebsiteForm
 from app.main import main_bp
+from celery import shared_task
+from flask import current_app
+from werkzeug.local import LocalProxy
 
+@shared_task
+def check_website_status():
+    # Access the current Flask application object in a more convenient way. Useful when dealing with contexts like
+    # multithreading or when the application object is not directly available.
+    app_proxy = LocalProxy(lambda: current_app._get_current_object())
 
-@shared_task(ignore_result=False)
-def check_website_status(app):
-    with app.app_context():
+    # Use the app context
+    with app_proxy.app_context():
         current_app.logger.info(f"Checking website status at {datetime.utcnow()}")
         websites = Website.query.all()
 
@@ -57,7 +62,7 @@ def check_website_status(app):
                         # The delay() method is used to defer the execution of a function or method call to a
                         # background worker in a task queue, which allows the main application to continue processing
                         # without blocking.
-                        send_email.delay(website.url, status, user.email)
+                        send_email(website.url, status, user.email)
                         user.decrement_notifications()
                         user_website.last_notified = datetime.utcnow()
                         db.session.commit()

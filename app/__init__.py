@@ -12,7 +12,7 @@ from celery.schedules import crontab
 
 def create_app(config_class=None):
     app = Flask(__name__, template_folder='templates')
-
+    app.app_context().push()
     # Load environment variables from .env file
     basedir = os.path.abspath(os.path.dirname(__file__))
     load_dotenv(os.path.join(basedir, '.env'))
