@@ -1,6 +1,7 @@
 alembic==1.10.0
 amqp==5.1.1
 antiorm==1.2.1
+appmap==1.15.0
 async-timeout==4.0.2
 billiard==3.6.4.0
 blinker==1.5
@@ -27,6 +28,9 @@ Flask-SQLAlchemy==3.0.3
 Flask-Testing==0.8.1
 Flask-WTF==1.1.1
 idna==3.4
+importlib-metadata==6.0.0
+importlib-resources==5.12.0
+inflection==0.5.1
 init==0.1.0
 itsdangerous==2.1.2
 Jinja2==3.1.2
@@ -57,5 +61,4 @@ wcwidth==0.2.6
 Werkzeug==2.2.3
 wrapt==1.15.0
 WTForms==3.0.1
-
-pytest~=7.2.2
+zipp==3.15.0

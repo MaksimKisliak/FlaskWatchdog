@@ -102,8 +102,8 @@
 
                 // Change the initial position of the obstacle
                 let obstaclePosition = -30;
-                obstacle.style.left = ''; // Remove the "right" style
-                obstacle.style.right = obstaclePosition + 'px'; // Set the "left" style instead
+                obstacle.style.left = ''; // Remove the "left" style
+                obstacle.style.right = obstaclePosition + 'px'; // Set the "right" style instead
 
                 let obstacleTimerId = setInterval(function () {
                     if (obstaclePosition >= dinoGame.clientWidth) {
@@ -123,8 +123,6 @@
                     }
                 }, 20);
             }
-
-            setInterval(createObstacle, 2000);
 
         });
     </script>
