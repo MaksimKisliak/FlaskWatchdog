@@ -1,5 +1,4 @@
 from datetime import datetime
-from flask_sqlalchemy import SQLAlchemy
 from app.extensions import db
 
 class UserWebsite(db.Model):
