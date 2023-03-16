@@ -55,6 +55,11 @@ def init_test_db(app):
     with app.app_context():
         db.create_all()
 
+        # Remove any existing data
+        db.session.query(User).delete()
+        db.session.query(Website).delete()
+        db.session.query(UserWebsite).delete()
+
         # Add initial data
         user1 = User(email='user1@example.com')
         user1.set_password('password1')
@@ -79,11 +84,14 @@ def init_test_db(app):
 
         db.session.commit()
 
-    yield
+        # Use `yield` to pause the execution, and let the tests run
+        yield
 
-    # Tear down the tables
     with app.app_context():
+        # Tear down the tables
         db.drop_all()
+        # Close any open transactions
+        db.session.close()
 
 
 # Define a fixture for CliRunner

@@ -22,7 +22,7 @@ def create_app(config_class=None):
 
     # Re-load configuration options from environment variables
     if config_class is None:
-        config_class = os.environ.get('FLASK_CONFIG')
+        config_class = os.environ.get('FLASK_CONFIG', 'default')
     app.config.from_object(config_class)  # Loads configuration options from the specified configuration class.
 
     # Initialize Flask-Login

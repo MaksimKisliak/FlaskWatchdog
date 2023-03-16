@@ -1,131 +1,237 @@
-# FlaskWatchdog
-<p>FlaskWatchdog is a website monitoring tool built with Flask, Celery, and SQLAlchemy. It allows users to add websites they want to monitor and receive email notifications when a website goes down or comes back online. The application also features rate limiting, logging, and user authentication with different levels of privileges.</p>
-
-        ┌───────────┐         ┌───────────────┐
-        │   User    │         │     Redis     │
-        └───────────┘         └───────────────┘
-              │                       ▲
-              │                       │
-              ▼                       │
-        ┌───────────┐                 │
-        │UserWebsite│     ┌───────────┐
-        └───────────┘     │   Celery  │
-              │           └───────────┘
-              │                 │     
-              ▼                 │     
-        ┌───────────┐           │     
-        │  Website  │◄──────────┘     
-        └───────────┘                 
-<ul><li>Users have a one-to-many relationship with UserWebsite objects</li><li>Websites have a many-to-many relationship with UserWebsite objects</li><li>Redis is used as a message broker to manage Celery tasks</li><li>Celery is used to periodically check the status of websites and send email notifications to users when a website goes offline or comes back online.</li></ul>
-<h2>Requirements</h2>
+<h1>FlaskWatchDog</h1>
+<p>FlaskWatchDog is a web application that allows users to monitor the status of their websites. Users can add websites to their dashboard, and the app will periodically check the status of these websites. Users will be notified when their website goes down or comes back online.</p>
+<h2>Table of Contents</h2>
 <ul>
-  <li>Python 3.7 or higher</li>
-  <li>Redis</li>
-  <li>SQLlite</li>
+<li><a>Installation</a></li>
+<li><a>Usage</a></li>
+<li><a>Admin Features</a></li>
+<li><a>Maintaining the App</a></li>
+<li><a>CLI commands</a></li>
+<li><a>Contributing</a></li>
+<li><a>Testing</a></li>
+<li><a>Deployment</a></li>
+<li><a>Monitoring and Logging</a></li>
+<li><a>Updating the App</a></li>
+<li><a>Troubleshooting</a></li>
 </ul>
 <h2>Installation</h2>
+<p>Follow these steps to install the app:</p>
 <ol>
-  <li>
-    <p>Clone the repository:</p>
-    <pre><code>git clone https://github.com/&lt;username&gt;/flask-watchdog.git
-cd flask-watchdog</code></pre>
-  </li>
-  <li>
-    <p>Create and activate a virtual environment:</p>
-    <pre><code>python3 -m venv venv
-source venv/bin/activate</code></pre>
-  </li>
-  <li>
-    <p>Install the dependencies:</p>
-    <pre><code>pip install -r requirements.txt</code></pre>
-  </li>
-  <li>
-    <p>Set up the environment variables:</p>
-    <pre><code>export SQLALCHEMY_DATABASE_URI=&lt;your-database-uri&gt;
-export SECRET_KEY=&lt;your-secret-key&gt;
-export MAIL_SERVER=&lt;your-mail-server&gt;
-export MAIL_PORT=&lt;your-mail-port&gt;
-export MAIL_USERNAME=&lt;your-mail-username&gt;
-export MAIL_PASSWORD=&lt;your-mail-password&gt;
-export CELERY_BROKER_URL=redis://localhost:6379/0
-export CELERY_RESULT_BACKEND=redis://localhost:6379/0</code></pre>
-  </li>
-  <li>
-    <p>Create the database:</p>
-    <pre><code>flask db init
-flask db migrate
-flask db upgrade</code></pre>
-  </li>
-  <li>
-    <p>Start the Flask application:</p>
-    <pre><code>flask run</code></pre>
-  </li>
-  <li>
-    <p>Start the redis server:</p>
-<<<<<<< HEAD
-    <pre><code>celery -A app.celery redis-server</code></pre>
-  </li>
-  <li>
-    <p>Start the Celery worker:</p>
-    <pre><code>celery -A app.celery worker --loglevel=INFO</code></pre>
-  </li>
-  <li>
-    <p>Start the Celery beat scheduler:</p>
-    <pre><code>celery -A app.celery beat --loglevel=INFO</code></pre>
-=======
-    <pre><code>redis-server</code></pre>
-  </li>
-  <li>
-    <p>Start the Celery worker:</p>
-    <pre><code>-A app.celery worker --loglevel=INFO </code></pre>
-  </li>
-  <li>
-    <p>Start the Celery beat scheduler:</p>
-    <pre><code>celery -A app.celery beat --loglevel=INFO</code></pre>
->>>>>>> origin/main
-  </li>
+<li>Clone this repository:</li>
 </ol>
+<pre>
+<code>git clone https://github.com/yourusername/FlaskWatchDog.git
+</code>
+</pre>
+<p>2. Create a virtual environment and activate it:</p>
+<pre>
+<code>cd FlaskWatchDog
+python3 -m venv venv
+source venv/bin/activate
+</code>
+</pre>
+<p>3. Install the required packages:</p>
+<pre>
+<code>pip install -r requirements.txt
+</code>
+</pre>
+<p>4. Set up the environment variables:</p>
+<pre>
+<code>export FLASK_APP=run.py
+export FLASK_ENV=development
+export SECRET_KEY=mysecretkey
+export DATABASE_URL=sqlite:///FlaskWatchDog.db
+export EMAIL_SERVER=smtp.example.com
+export EMAIL_PORT=587
+export EMAIL_USERNAME=myemail@example.com
+export EMAIL_PASSWORD=mypassword
+</code>
+</pre>
+<p>5. Initialize the database:</p>
+<pre>
+<code>flask db init
+flask db migrate -m "Initial migration"
+flask db upgrade
+</code>
+</pre>
+<p>6. Start the development server:</p>
+<pre>
+<code>flask run
+</code>
+</pre>
 <h2>Usage</h2>
+<p>Follow these steps to use the app:</p>
 <ol>
-  <li>
-    <p>Open your web browser and navigate to <code>http://localhost:5000</code>.</p>
-  </li>
-  <li>
-    <p>Create an account by clicking on the "Register" link in the navigation bar.</p>
-  </li>
-  <li>
-    <p>Log in with your email and password.</p>
-  </li>
-  <li>
-    <p>Click on the "Add Website" button to add a website to monitor. Enter the URL of the website and click on the "Add Website" button.</p>
-  </li>
- <li><p>The website will be added to your list of monitored websites. You will receive an email notification if the website goes down or comes back online.</p></li>
- <li><p>To delete a website from your list, click on the "Delete" button next to the website.</p></li>
- <li><p>To update your email address, click on the "Update Email" link in the navigation bar.</p></li>
- <li><p>To create an admin user, run the following command:</p><pre><span></span><code>flask create-admin <span>--email</span> &lt;admin-email&gt; <span>--password</span> &lt;admin-password&gt;
-</code></pre></li>
-  <li><p>To create a regular user, run the following command:</p><pre><span></span><code>flask <span>create</span><span>-</span><span>user</span> <span>--email &lt;user-email&gt; --password &lt;user-password&gt;</span>
-</code></pre></li>
+<li><p>Open your web browser and visit <code>http://localhost:5000/</code>.</p></li>
+<li><p>Register a new account and log in to your dashboard.</p></li>
+<li><p>Add websites you want to monitor by entering their URLs.</p></li>
+<li><p>The app will periodically check the status of your websites and notify you when they go down or come back online.</p></li>
 </ol>
-<h2> Migration to PostgreSQL database</h2>
-<p>To prepare your Flask app to use PostgreSQL database, you will need to follow these steps:</p>
+<h2>Admin Features</h2>
+<p>As an admin, you can:</p>
+<ul>
+<li>Add new users manually</li>
+<li>View all users, websites, and user-website relationships</li>
+</ul>
+<p>To access the admin panel, visit <code>http://localhost:5000/admin</code>.</p>
+<h2>Maintaining the App</h2>
+<p>Follow these steps to maintain the app:</p>
 <ol>
- <li><p>Install the <code>psycopg2</code> library by running the following command in your terminal:</p><pre><span></span>
- <code>pip install psycopg2-<span>binary</span>
-</code></pre></li>
- <li><p>Update your <code>requirements.txt</code> file to include the <code>psycopg2-binary</code> library.</p></li>
- <li><p>Create a PostgreSQL database and user with appropriate permissions. You can do this using the <code>createdb</code> and <code>createuser</code> command-line utilities in PostgreSQL.</p></li>
- <li><p>Set the <code>SQLALCHEMY_DATABASE_URI</code> environment variable to the connection string for your PostgreSQL database. For example:</p><pre><span></span><code>postgresql://username:password@localhost/database_name
-</code></pre><p>Replace <code>username</code> and <code>password</code> with your PostgreSQL username and password, respectively, and <code>database_name</code> with the name of your PostgreSQL database.</p></li>
- <li><p>Update your <code>config.py</code> file to use PostgreSQL as your database by setting the <code>SQLALCHEMY_DATABASE_URI</code> configuration variable to the value of the <code>SQLALCHEMY_DATABASE_URI</code> environment variable.</p></li>
- <li><p>In your <code>requirements.txt</code> file, add the <code>psycopg2-binary</code> library as a dependency.</p></li>
+<li>Regularly update the packages:</li>
 </ol>
-<h2>Fields for improvement :</h2>
+<pre>
+<code>pip install -U -r requirements.txt
+</code>
+</pre>
+<p>2. Keep your repository up to date with the latest changes:</p>
+<pre>
+<code>git pull origin main
+</code>
+</pre>
+<p>3. Periodically check for security vulnerabilities:</p>
+<pre>
+<code>pip install safety
+safety check
+</code>
+</pre>
+<p>4. Monitor the logs for any errors or issues:</p>
+<pre>
+<code>tail -f logs/app.log
+</code>
+</pre>
+<p>5. Backup the database regularly:</p>
+<pre>
+<code>cp FlaskWatchDog.db backup/FlaskWatchDog.db_$(date +%Y-%m-%d_%H-%M-%S)
+</code>
+</pre>
+<h2>CLI commands</h2>
 <ol>
- <li><p>Security: Although there are some security measures in place such as CSRF protection, password hashing, and rate limiting, there is still room for improvement. For example, implementing two-factor authentication, using secure cookies, and implementing strict access control policies can help improve the security of the application.</p></li>
- <li><p>Testing: There are currently no unit tests or integration tests for the application. Implementing automated tests can help ensure that the application is functioning correctly and can catch issues early in the development process.</p></li>
- <li><p>Error handling: The application has error handling for some HTTP error codes, but not all. Adding more comprehensive error handling can help improve the user experience and make it easier to diagnose issues.</p></li>
- <li><p>Scalability: The current implementation may not be scalable for a large number of users and websites. Implementing techniques such as load balancing, horizontal scaling, and caching can help improve the scalability of the application.</p></li>
- <li><p>Code structure: The current codebase could be refactored to make it more modular and easier to maintain. This could involve breaking up the code into smaller functions or classes, reducing the number of global variables, and improving code readability.</p></li>
+<li>
+<p><strong>Activate your virtual environment</strong> (if you are using one):</p>
+<pre><code>source venv/bin/activate</code></pre>
+</li>
+<li>
+<p><strong>Set environment variables</strong>:</p>
+<pre><code>export FLASK_APP=run.py</code></pre>
+<pre><code>export FLASK_ENV=development</code></pre>
+</li>
+<li>
+<p><strong>Run CLI commands</strong>:</p>
+<p>To run the custom CLI command <code>check-status</code> in your Flask app, use the following command:</p>
+<pre><code>flask check-status</code></pre>
+</li>
+<li>
+<p><strong>Install and start Redis</strong>:</p>
+<p>Install Redis, if not already installed:</p>
+<pre><code>brew install redis</code></pre>
+<p>Start Redis server:</p>
+<pre><code>redis-server</code></pre>
+<p>Check Redis connection by running the following command:</p>
+<pre><code>redis-cli ping</code></pre>
+<p>If the connection is successful, you will receive the "PONG" response.</p>
+</li>
+<li>
+<p><strong>Run Celery worker and Celery beat</strong>:</p>
+<p>Start Celery worker:</p>
+<pre><code>celery -A run.celery worker --loglevel=INFO</code></pre>
+<p>Start Celery beat:</p>
+<pre><code>celery -A run.celery beat --loglevel=INFO</code></pre>
+<p>Make sure to replace <code>run</code> with the name of your entry point file if it is different from <code>run.py</code>.</p>
+</li>
 </ol>
- 
+<h2>Testing</h2>
+<p>Before deploying changes to production, run tests to ensure that everything works as expected.</p>
+<ol>
+<li>Install the testing requirements:</li>
+</ol>
+<pre><code>pip install -r requirements-test.txt</code></pre>
+<ol start="2">
+<li>Run the tests:</li>
+</ol>
+<pre><code>pytest</code></pre>
+<ol start="3">
+<li>Check the code coverage:</li>
+</ol>
+<pre><code>coverage run -m pytest
+coverage report</code></pre>
+<h2>Deployment</h2>
+<ol>
+<li>Set up the production environment variables:</li>
+</ol>
+<pre><code>FLASK_CONFIG="config.DevelopmentConfig"
+FLASK_APP="run.py"
+SECRET_KEY="[secret key>]"
+MAIL_PASSWORD="MAIL_PASSWORD"
+MAIL_PORT="e.g.465"
+MAIL_SERVER="smtp.gmail.com"
+MAIL_USERNAME="MAIL_USERNAME"
+CELERY_BROKER_URL="redis://localhost:6379/0"
+DEV_DATABASE_URI="sqlite:///flaskwatchdog_dev.db"
+TEST_DATABASE_URI="sqlite:///flaskwatchdog_tests.db"
+PROD_DATABASE_URI="sqlite:///flaskwatchdog_prod.db"</code></pre>
+<ol start="2">
+<li>Install a production-ready WSGI server, such as Gunicorn:</li>
+</ol>
+<pre><code>pip install gunicorn</code></pre>
+<ol start="3">
+<li>Start the server:</li>
+</ol>
+<pre><code>gunicorn -w 4 -b 0.0.0.0:8000 run:app</code></pre>
+<ol start="4">
+<li><p>Set up a reverse proxy, such as Nginx, to forward requests to Gunicorn.</p></li>
+<li><p>Configure SSL/TLS using a service like Let's Encrypt.</p></li>
+<li><p>Set up periodic tasks for website monitoring using a task scheduler, such as Celery.</p></li>
+</ol>
+<h2>Monitoring and Logging</h2>
+<ol>
+<li><p>Monitor the application's performance using a monitoring tool, such as New Relic or Datadog.</p></li>
+<li><p>Set up log rotation to manage log files and prevent them from consuming too much disk space.</p></li>
+<li><p>Configure log aggregation and analysis using a service like Logstash, Elasticsearch, and Kibana (ELK Stack) or Graylog.</p></li>
+<li><p>Set up alerts and notifications for critical events.</p></li>
+</ol>
+<h2>Updating the App</h2>
+<ol>
+<li>Pull the latest changes from the repository:</li>
+</ol>
+<pre>
+<code>git pull origin <span>main</span>
+</code>
+</pre>
+<ol start="2">
+<li>Install any new dependencies:</li>
+</ol>
+<pre>
+<code>pip install -r requirements.txt
+</code>
+</pre>
+<ol start="3">
+<li>Apply any new database migrations:</li>
+</ol>
+<pre>
+<code>flask db upgrade
+</code>
+</pre>
+<ol start="4">
+<li>Restart the application server (e.g., Gunicorn) and reverse proxy (e.g., Nginx).</li>
+</ol>
+<h2>Troubleshooting</h2>
+<p>If you encounter issues with the app, check the following:</p>
+<ol>
+<li><p>Review the logs for any error messages or stack traces.</p></li>
+<li><p>Ensure that all required environment variables are set and have the correct values.</p></li>
+<li><p>Verify that the database server is running and accessible.</p></li>
+<li><p>Check the application server (e.g., Gunicorn) and reverse proxy (e.g., Nginx) configurations.</p></li>
+<li><p>Confirm that all dependencies are installed and up-to-date.</p></li>
+</ol>
+<h2>Contributing</h2>
+<p>If you want to contribute to this project, please follow these steps:</p>
+<ol>
+<li>Fork the repository.</li>
+<li>Create a new branch with a descriptive name.</li>
+<li>Make your changes and commit them to your branch.</li>
+<li>Create a pull request and describe the changes you made.</li>
+</ol>
+<p>We will review your changes and decide whether to merge them into the main branch.</p>
+<h2>License</h2>
+<p>FlaskWatchDog is licensed under the MIT License. See the <a>LICENSE</a> file for more information.</p>
+
