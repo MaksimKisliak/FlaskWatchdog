@@ -14,7 +14,7 @@ from app.models.website import Website
 @limiter.limit("100 per minute")
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('main.homepage'))
+        return redirect(url_for('main.dashboard'))
 
     form = LoginForm()
     if form.validate_on_submit():
@@ -25,7 +25,7 @@ def login():
             user.last_login = datetime.utcnow()  # Update the last_login timestamp
             db.session.commit()  # Commit the changes
             login_user(user)
-            return redirect(url_for('main.homepage'))
+            return redirect(url_for('main.dashboard'))
         else:
             flash('Invalid email or password')
             return redirect(url_for('auth.login'))
@@ -56,7 +56,7 @@ def register():
             login_user(user)
             user.last_login = datetime.utcnow()  # Update the last_login timestamp
             db.session.commit()  # Commit the changes
-            return redirect(url_for('main.homepage'))
+            return redirect(url_for('main.dashboard'))
 
     return render_template('auth/register.html', is_admin=is_admin, form=form)
 
@@ -65,7 +65,7 @@ def register():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('main.homepage'))
+    return redirect(url_for('main.dashboard'))
 
 
 @auth_bp.route('/admin', methods=['GET', 'POST'])
@@ -114,7 +114,7 @@ def update_email():
                 current_user.email = form.email.data
                 db.session.commit()
                 flash('Your email has been updated.', 'success')
-                return redirect(url_for('main.homepage'))
+                return redirect(url_for('main.dashboard'))
             else:
                 flash('Invalid password.', 'danger')
                 return redirect(url_for('auth.update_email'))

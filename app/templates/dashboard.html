@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block styles %}
     <style>
@@ -139,7 +139,7 @@
             <div class="col-lg-6">
                 <!-- Add Website form -->
                 <h2>Add Website</h2>
-                <form method="post" action="{{ url_for('main.homepage') }}" class="form">
+                <form method="post" action="{{ url_for('main.dashboard') }}" class="form">
                     {{ form.hidden_tag() }}
                     <div class="form-group">
                         {{ form.url.label(class="form-control-label") }}

@@ -15,7 +15,7 @@ def test_check_status(runner):
 
 
 def test_send_test_email(runner):
-    email = "test@example.com"
+    email = "makskislyak@gmail.com"
     result = runner.invoke(cli, ["send-test-email", "--email", email])
     assert result.exit_code == 0
     assert 'Test email sent' in result.output

@@ -103,7 +103,7 @@ def send_email(website, status, user):
 @main_bp.route('/', methods=['GET', 'POST'])
 @login_required
 @limiter.limit("100 per minute")
-def homepage():
+def dashboard():
     form = WebsiteForm()
     if form.validate_on_submit():
         # check if website already exists in db
@@ -119,7 +119,7 @@ def homepage():
                 db.session.add(user_website)
                 db.session.commit()
             flash('Website added successfully.')
-            return redirect(url_for('main.homepage'))
+            return redirect(url_for('main.dashboard'))
         else:
             # add new website to db and add current user to its users
             website = Website(url=domain_name)
@@ -131,10 +131,10 @@ def homepage():
             db.session.commit()
 
             flash('Website added successfully.')
-            return redirect(url_for('main.homepage'))
+            return redirect(url_for('main.dashboard'))
 
     websites = [user_website.website for user_website in current_user.user_websites]
-    return render_template('index.html', form=form, websites=websites)
+    return render_template('dashboard.html', form=form, websites=websites)
 
 
 @main_bp.route('/delete/<int:id>', methods=['POST'])
@@ -144,7 +144,7 @@ def delete_website(id):
 
     if not user_website:
         flash('You are not authorized to delete this website.')
-        return redirect(url_for('homepage'))
+        return redirect(url_for('dashboard'))
 
     db.session.delete(user_website)
     db.session.commit()
@@ -156,4 +156,4 @@ def delete_website(id):
         db.session.commit()
 
     flash('Website deleted successfully.')
-    return redirect(url_for('main.homepage'))
+    return redirect(url_for('main.dashboard'))
