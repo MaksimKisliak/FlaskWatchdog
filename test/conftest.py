@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 
 # Define a fixture for the Flask application
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def app():
     # Set configuration for testing environment
     flask_app.config.from_object(TestingConfig)
@@ -49,7 +49,7 @@ def client(app):
 
 
 # Define a fixture to initialize test database
-@pytest.fixture
+@pytest.fixture(scope="function")
 def init_test_db(app):
     # Create the tables
     with app.app_context():

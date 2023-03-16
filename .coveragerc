@@ -1,5 +1,0 @@
-[run]
-source = FlaskWatchdog
-
-[report]
-show_missing = True

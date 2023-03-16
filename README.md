@@ -167,7 +167,7 @@ MAIL_SERVER="smtp.gmail.com"
 MAIL_USERNAME="MAIL_USERNAME"
 CELERY_BROKER_URL="redis://localhost:6379/0"
 DEV_DATABASE_URI="sqlite:///flaskwatchdog_dev.db"
-TEST_DATABASE_URI="sqlite:///flaskwatchdog_tests.db"
+TEST_DATABASE_URI="sqlite:///flaskwatchdog_test.db"
 PROD_DATABASE_URI="sqlite:///flaskwatchdog_prod.db"</code></pre>
 <ol start="2">
 <li>Install a production-ready WSGI server, such as Gunicorn:</li>

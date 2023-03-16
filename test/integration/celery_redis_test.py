@@ -47,7 +47,7 @@ def send_email_mock():
         yield mock
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
 def celery_config(app):
     """
     Fixture for setting up the Celery configuration.
