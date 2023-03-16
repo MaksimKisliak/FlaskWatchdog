@@ -4,7 +4,6 @@ from app import create_app, cli
 from app.extensions import ext_celery
 
 
-# Load environment variables from .env file
 basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '.env'))
 

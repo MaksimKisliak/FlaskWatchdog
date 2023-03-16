@@ -5,7 +5,7 @@ import pytest
 from run import app as flask_app
 import os
 import sys
-from app import db
+from app import db, ext_celery
 from app.models.user import User
 from app.models.website import Website
 from app.models.userwebsite import UserWebsite
@@ -25,11 +25,19 @@ load_dotenv(os.path.join(basedir, ".env"))
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
+
 # Define a fixture for the Flask application
-@pytest.fixture
+@pytest.fixture(scope="module")
 def app():
     # Set configuration for testing environment
     flask_app.config.from_object(TestingConfig)
+
+    # Create and configure the Celery instance for testing
+    from app.extensions import make_celery
+    with flask_app.app_context():
+        test_celery = make_celery(flask_app)
+        ext_celery.celery = test_celery
+
     return flask_app
 
 

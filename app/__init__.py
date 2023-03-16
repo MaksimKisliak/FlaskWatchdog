@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 import logging
 from logging.handlers import RotatingFileHandler
-from app.cli import check_status, send_test_email, create_admin, create_user, list_users, list_websites,\
+from app.cli import check_status, send_test_email, create_admin, create_user, list_users, list_websites, \
     list_user_websites, create_website
 from celery.schedules import crontab
 
@@ -45,13 +45,13 @@ def create_app(config_class=None):
     ext_celery.init_app(app)
 
     # Schedule periodic task for Celery beat
-    ext_celery.celery.conf.beat_schedule = {
-        'check_website_status': {
-            'task': 'app.main.routes.check_website_status',
-            'schedule': crontab(minute='*/10')  # Run every 10 minute
+    if not app.config['TESTING']:
+        ext_celery.celery.conf.beat_schedule = {
+            'check_website_status': {
+                'task': 'app.main.routes.check_website_status',
+                'schedule': crontab(minute='*/10')  # Run every 10 minute
+            }
         }
-    }
-
     # Set up logging
     if not app.debug:
         if not os.path.exists('logs'):
