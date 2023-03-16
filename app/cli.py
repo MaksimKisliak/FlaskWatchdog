@@ -125,7 +125,5 @@ def create_website(url):
         click.echo("No users available in the database")
 
 
-
-
 if __name__ == '__main__':
     cli()

@@ -11,24 +11,36 @@ from app.models.website import Website
 from app.models.userwebsite import UserWebsite
 import datetime
 
+"""The app fixture creates a Flask application instance that is used by other test functions. Similarly, the client 
+fixture initializes a test client that is used to make HTTP requests to the Flask application, and the init_test_db 
+fixture initializes the test database. By defining these fixtures, we can reuse the same objects across multiple tests,
+ which helps to reduce code duplication and make the tests more modular."""
+
+
+# Load environment variables from .env file
 basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 load_dotenv(os.path.join(basedir, ".env"))
 
+# Add project directory to system path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
+# Define a fixture for the Flask application
 @pytest.fixture
 def app():
+    # Set configuration for testing environment
     flask_app.config.from_object(TestingConfig)
     return flask_app
 
 
+# Define a fixture for the test client
 @pytest.fixture
 def client(app):
     with app.test_client() as test_client:
         yield test_client
 
 
+# Define a fixture to initialize test database
 @pytest.fixture
 def init_test_db(app):
     # Create the tables
@@ -66,7 +78,7 @@ def init_test_db(app):
         db.drop_all()
 
 
-# Add the CliRunner fixture
+# Define a fixture for CliRunner
 @pytest.fixture
 def runner():
     return CliRunner()

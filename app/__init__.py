@@ -10,18 +10,20 @@ from app.cli import check_status, send_test_email, create_admin, create_user, li
 from celery.schedules import crontab
 
 
-
+# Define a function that creates and returns a Flask application instance.
 def create_app(config_class=None):
     # Load environment variables from .env file
     basedir = os.path.abspath(os.path.dirname(__file__))
     load_dotenv(os.path.join(basedir, '.env'))
+
+    # Create Flask app instance
     app = Flask(__name__, template_folder='templates')
     app.app_context().push()
 
     # Re-load configuration options from environment variables
     if config_class is None:
         config_class = os.environ.get('FLASK_CONFIG')
-    app.config.from_object(config_class)
+    app.config.from_object(config_class)  # Loads configuration options from the specified configuration class.
 
     # Initialize Flask-Login
     login_manager = LoginManager(app)
@@ -31,7 +33,7 @@ def create_app(config_class=None):
     from app.models.user import User
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        return User.query.get(int(user_id))  # loads a user from the database based on the user ID.
 
     # Initialize extensions
     db.init_app(app)
@@ -42,6 +44,7 @@ def create_app(config_class=None):
     limiter.init_app(app)
     ext_celery.init_app(app)
 
+    # Schedule periodic task for Celery beat
     ext_celery.celery.conf.beat_schedule = {
         'check_website_status': {
             'task': 'app.main.routes.check_website_status',
@@ -60,7 +63,7 @@ def create_app(config_class=None):
         file_handler.setLevel(logging.INFO)
         app.logger.addHandler(file_handler)
         app.logger.setLevel(logging.INFO)
-        app.logger.info('FlaskWatchdog')
+        app.logger.info('FlaskWatchdog')  # Sets up logging for the Flask application.
 
     # Register custom commands
     app.cli.add_command(check_status)
@@ -73,20 +76,17 @@ def create_app(config_class=None):
     app.cli.add_command(create_website)
 
     # Register blueprints
-    print("Registering errors blueprint")
     from app.errors import errors_bp
     app.register_blueprint(errors_bp)
 
-    print("Registering main blueprint")
     from app.main import main_bp
     app.register_blueprint(main_bp)
 
-    print("Registering auth blueprint")
     from app.auth import auth_bp
     app.register_blueprint(auth_bp)
 
-    # shell context for flask cli
-    # Curious as to why we dont have to import db via from app import db in Flask shell? We added it to the
+    # Add objects to Flask shell context shell context for flask cli
+    # Therefore there's no need to import db via from app import db in Flask shell? Those are added to the
     # shell context with shell_context_processor in the create_app function.
     @app.shell_context_processor
     def ctx():
