@@ -7,11 +7,11 @@
 <li><a>Admin Features</a></li>
 <li><a>Maintaining the App</a></li>
 <li><a>CLI commands</a></li>
-<li><a>Contributing</a></li>
 <li><a>Testing</a></li>
 <li><a>Deployment</a></li>
 <li><a>Monitoring and Logging</a></li>
 <li><a>Updating the App</a></li>
+  <li><a>Contributing</a></li>
 <li><a>Troubleshooting</a></li>
 </ul>
 <h2>Installation</h2>
