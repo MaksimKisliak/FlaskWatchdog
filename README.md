@@ -38,9 +38,17 @@ source venv/bin/activate
 <p>4. Set up the environment variables:</p>
 <pre>
 <code>
-FLASK_CONFIG="config.ProductionConfig"
-CELERY_BROKER_URL="cloud_solution_url"
-...
+FLASK_CONFIG="config.DevelopmentConfig"
+FLASK_APP="run.py"
+SECRET_KEY="klk@#fsdjfonj134njnf"
+MAIL_PASSWORD="a2AxKKAGKxsTs28KMfzY"
+MAIL_PORT="465"
+MAIL_SERVER="smtp.mail.ru"
+MAIL_USERNAME="makskislyak1@mail.ru"
+CELERY_BROKER_URL="redis://localhost:6379/0"
+DEV_DATABASE_URI="sqlite:///flaskwatchdog_dev.db"
+TEST_DATABASE_URI="sqlite:///flaskwatchdog_test.db"
+PROD_DATABASE_URI="sqlite:///flaskwatchdog_prod.db"
 </code>
 </pre>
 <p>5. Initialize the database:</p>
@@ -179,17 +187,6 @@ TOTAL                                     720     98    86%
 <ol>
 <li>Set up the production environment variables:</li>
 </ol>
-<pre><code>FLASK_CONFIG="config.DevelopmentConfig"
-FLASK_APP="run.py"
-SECRET_KEY="[secret key>]"
-MAIL_PASSWORD="MAIL_PASSWORD"
-MAIL_PORT="e.g.465"
-MAIL_SERVER="smtp.gmail.com"
-MAIL_USERNAME="MAIL_USERNAME"
-CELERY_BROKER_URL="redis://localhost:6379/0"
-DEV_DATABASE_URI="sqlite:///flaskwatchdog_dev.db"
-TEST_DATABASE_URI="sqlite:///flaskwatchdog_test.db"
-PROD_DATABASE_URI="sqlite:///flaskwatchdog_prod.db"</code></pre>
 <ol start="2">
 <li>Install a production-ready WSGI server, such as Gunicorn:</li>
 </ol>
