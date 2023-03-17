@@ -1,11 +1,10 @@
 from dotenv import load_dotenv
-from config import TestingConfig
+from config import TestingConfig, config
 from click.testing import CliRunner
 import pytest
-from run import app as flask_app
 import os
 import sys
-from app import db, ext_celery
+from app import db, ext_celery, create_app
 from app.models.user import User
 from app.models.website import Website
 from app.models.userwebsite import UserWebsite
@@ -17,20 +16,16 @@ fixture initializes the test database. By defining these fixtures, we can reuse 
  which helps to reduce code duplication and make the tests more modular."""
 
 
-# Load environment variables from .env file
-basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-load_dotenv(os.path.join(basedir, ".env"))
-
 # Add project directory to system path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 
 
 # Define a fixture for the Flask application
 @pytest.fixture(scope="function")
 def app():
+    flask_app = create_app(config['testing'])
     # Set configuration for testing environment
-    flask_app.config.from_object(TestingConfig)
+    # flask_app.config.from_object(TestingConfig)
 
     # Create and configure the Celery instance for testing
     from app.extensions import make_celery

@@ -12,9 +12,6 @@ from celery.schedules import crontab
 
 # Define a function that creates and returns a Flask application instance.
 def create_app(config_class=None):
-    # Load environment variables from .env file
-    basedir = os.path.abspath(os.path.dirname(__file__))
-    load_dotenv(os.path.join(basedir, '.env'))
 
     # Create Flask app instance
     app = Flask(__name__, template_folder='templates')

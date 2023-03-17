@@ -20,7 +20,7 @@
 <li>Clone this repository:</li>
 </ol>
 <pre>
-<code>git clone https://github.com/yourusername/FlaskWatchDog.git
+<code>git clone https://github.com/MaksimKisliak/FlaskWatchdog
 </code>
 </pre>
 <p>2. Create a virtual environment and activate it:</p>
@@ -37,14 +37,10 @@ source venv/bin/activate
 </pre>
 <p>4. Set up the environment variables:</p>
 <pre>
-<code>export FLASK_APP=run.py
-export FLASK_ENV=development
-export SECRET_KEY=mysecretkey
-export DATABASE_URL=sqlite:///FlaskWatchDog.db
-export EMAIL_SERVER=smtp.example.com
-export EMAIL_PORT=587
-export EMAIL_USERNAME=myemail@example.com
-export EMAIL_PASSWORD=mypassword
+<code>
+FLASK_CONFIG="config.ProductionConfig"
+CELERY_BROKER_URL="cloud_solution_url"
+...
 </code>
 </pre>
 <p>5. Initialize the database:</p>
@@ -153,7 +149,32 @@ safety check
 <li>Check the code coverage:</li>
 </ol>
 <pre><code>coverage run -m pytest
-coverage report</code></pre>
+coverage report<p>app/__init__.py                            59      3    95%
+app/auth/__init__.py                        4      0   100%
+app/auth/routes.py                         97     39    60%
+app/cli.py                                 91      9    90%
+app/errors/__init__.py                      4      0   100%
+app/errors/handlers.py                     13      4    69%
+app/extensions.py                          17      0   100%
+app/forms.py                               23      0   100%
+app/main/__init__.py                        4      0   100%
+app/main/routes.py                        105     34    68%
+app/make_celery.py                          5      0   100%
+app/models/user.py                         33      4    88%
+app/models/userwebsite.py                  12      0   100%
+app/models/website.py                      10      1    90%
+config.py                                  35      1    97%
+run.py                                     10      1    90%
+test/__init__.py                            0      0   100%
+test/conftest.py                           58      1    98%
+test/functional/__init__.py                 0      0   100%
+test/functional/test_commands.py           40      0   100%
+test/integration/__init__.py                0      0   100%
+test/integration/celery_redis_test.py      35      0   100%
+test/integration/test_app.py               65      1    98%
+-----------------------------------------------------------
+TOTAL                                     720     98    86%
+</p></code></pre>
 <h2>Deployment</h2>
 <ol>
 <li>Set up the production environment variables:</li>

@@ -1,8 +1,10 @@
 import os
+import sys
+
 from dotenv import load_dotenv
 
 # Check if running on local machine or cloud server
-is_local = os.environ.get('ENVIRONMENT') is None
+is_local = os.environ.get('ENVIRONMENT') == 'local' or os.environ.get('ENVIRONMENT') is None
 
 if is_local:
     # Load environment variables from .env file
@@ -11,6 +13,9 @@ if is_local:
 else:
     # Assume environment variables are already set for cloud server providers
     pass
+
+# Add project directory to system path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
 class Config:
