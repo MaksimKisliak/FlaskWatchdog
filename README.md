@@ -1,5 +1,6 @@
 <h1>FlaskWatchDog</h1>
 <p>FlaskWatchDog is a web application that allows users to monitor the status of their websites. Users can add websites to their dashboard, and the app will periodically check the status of these websites. Users will be notified when their website goes down or comes back online. The app is designed as a challenge to itself.</p>
+<p>The introductory functionality and integrability tests have been compiled to ensure the application works as expected. Coverage tests have been conducted, and the project has achieved 86% test coverage. These tests help maintain the quality and reliability of the application while making it easier to identify and fix issues as the project evolves.</p>
 <h2>Table of Contents</h2>
 <ul>
 <li><a>Installation</a></li>
@@ -77,7 +78,7 @@ flask db upgrade
 <li>Add new users manually</li>
 <li>View all users, websites, and user-website relationships</li>
 </ul>
-<p>To access the admin panel, visit <code>http://localhost:5000/admin</code>.</p>
+<p>To access the admin panel, visit <code>http://localhost:5000/auth/admin</code>.</p>
 <h2>Maintaining the App</h2>
 <p>Follow these steps to maintain the app:</p>
 <ol>
