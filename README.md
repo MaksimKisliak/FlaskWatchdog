@@ -2,7 +2,7 @@
 <p>FlaskWatchDog is a web application that allows users to monitor the status of their websites. Users can add websites to their dashboard, and the app will periodically check the status of these websites. Users will be notified when their website goes down or comes back online. The app is designed as a challenge to itself.</p>
 <h2>Table of Contents</h2>
 <ul>
-<a><li>Installation</li></a>
+<li><a>Installation</a></li>
 <li><a>Usage</a></li>
 <li><a>Admin Features</a></li>
 <li><a>Maintaining the App</a></li>
