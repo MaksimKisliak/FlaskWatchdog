@@ -249,7 +249,7 @@ TOTAL                                     720     98    86%
 <li>Make your changes and commit them to your branch.</li>
 <li>Create a pull request and describe the changes you made.</li>
 </ol>
-<p>We will review your changes and decide whether to merge them into the main branch.</p>
+<p>I will review your changes and decide whether to merge them into the main branch.</p>
 <h2>License</h2>
 <p>FlaskWatchDog is licensed under the MIT License. See the <a>LICENSE</a> file for more information.</p>
 
