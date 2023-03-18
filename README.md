@@ -42,7 +42,7 @@ source venv/bin/activate
 FLASK_CONFIG="config.DevelopmentConfig"
 FLASK_APP="run.py"
 SECRET_KEY="klk@#fsdjfonj134njnf"
-MAIL_PASSWORD="a2AxKKAGKxsTs28KMfzY"
+MAIL_PASSWORD="MAIL_PASSWORD"
 MAIL_PORT="465"
 MAIL_SERVER="smtp.mail.ru"
 MAIL_USERNAME="makskislyak1@mail.ru"
