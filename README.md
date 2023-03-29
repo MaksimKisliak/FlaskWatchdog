@@ -49,9 +49,9 @@ MAIL_SERVER="smtp.mail.ru"
 MAIL_USERNAME="mail@mail.com"
 CELERY_BROKER_URL="redis://redis:6379/0"
 LIMITER_STORAGE_URL="redis://redis:6379"
-DEV_DATABASE_URI="sqlite:///flaskwatchdog_dev.db"
-TEST_DATABASE_URI="sqlite:///flaskwatchdog_test.db"
-PROD_DATABASE_URI="sqlite:///flaskwatchdog_prod.db"
+DEV_DATABASE_URI="postgresql://maksimkisliak:123qwe@postgres:5432/flaskwatchdog_dev"
+TEST_DATABASE_URI="postgresql://maksimkisliak:123qwe@postgres:5432/flaskwatchdog_test"
+PROD_DATABASE_URI="postgresql://maksimkisliak:123qwe@postgres:5432/flaskwatchdog_prod"
 </code>
 </pre>
 <p>5. Initialize the database:</p>
