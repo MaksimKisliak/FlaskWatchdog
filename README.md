@@ -118,7 +118,7 @@ safety check
 <li>
 <p><strong>Set environment variables</strong>:</p>
 <pre><code>export FLASK_APP=run.py</code></pre>
-<pre><code>export FLASK_ENV=development</code></pre>
+<pre><code>export FLASK_DEBUG=1</code></pre>
 </li>
 <li>
 <p><strong>Run CLI commands</strong>:</p>

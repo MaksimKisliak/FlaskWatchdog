@@ -15,7 +15,7 @@ else:
     pass
 
 # Add project directory to system path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "")))
 
 
 class Config:
@@ -28,10 +28,11 @@ class Config:
     MAIL_USE_TLS = False
     MAIL_USE_SSL = True
     RATELIMIT_MESSAGE = 'Chill out, man!'
-    LIMITER_STORAGE_URL = os.environ.get('LIMITER_STORAGE_URL', 'redis://localhost:6379')
     TESTING = False
-    CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://127.0.0.1:6379/0")
-    CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://127.0.0.1:6379/0")
+    LIMITER_STORAGE_URL = os.environ.get('LIMITER_STORAGE_URL', 'redis://redis:6379')
+    CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://redis:6379")
+    CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://redis:6379")
+    DEBUG = os.environ.get('FLASK_ENV')
 
     @staticmethod
     def init_app(app):
@@ -46,8 +47,8 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URI') or 'sqlite:///flaskwatchdog_test.db'
-    CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://127.0.0.1:6379/0")
-    CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://127.0.0.1:6379/0")
+    CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://redis:6379")
+    CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://redis:6379")
 
 
 class ProductionConfig(Config):

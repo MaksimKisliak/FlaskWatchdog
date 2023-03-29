@@ -2,7 +2,6 @@ from flask import Flask
 from flask_login import LoginManager
 from app.extensions import mail, csrf, limiter, db, migrate, ext_celery
 import os
-from dotenv import load_dotenv
 import logging
 from logging.handlers import RotatingFileHandler
 from app.cli import check_status, send_test_email, create_admin, create_user, list_users, list_websites, \
@@ -89,4 +88,4 @@ def create_app(config_class=None):
     def ctx():
         return {"app": app, "db": db}
 
-    return app
+    return app, ext_celery.celery

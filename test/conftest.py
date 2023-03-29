@@ -17,7 +17,7 @@ fixture initializes the test database. By defining these fixtures, we can reuse 
 
 
 # Add project directory to system path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../FlaskWatchdog")))
 
 
 # Define a fixture for the Flask application

@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  flask:
+    build: .
+    environment:
+      - FLASK_CONFIG=config.DevelopmentConfig
+    volumes:
+      - .:/app
+    ports:
+      - '5000:5000'
+    depends_on:
+      - redis
+
+  celery_worker:
+    build: .
+    environment:
+      - FLASK_CONFIG=config.DevelopmentConfig
+    volumes:
+      - .:/app
+    command: celery -A celery_app.celery worker --loglevel=info
+    depends_on:
+      - flask
+      - redis
+
+  celery_beat:
+    build: .
+    environment:
+      - FLASK_CONFIG=config.DevelopmentConfig
+    volumes:
+      - .:/app
+    command: celery -A celery_app.celery beat --loglevel=info
+    depends_on:
+      - flask
+      - redis
+
+  redis:
+    image: 'redis:latest'
+    ports:
+      - '6379:6379'
+
