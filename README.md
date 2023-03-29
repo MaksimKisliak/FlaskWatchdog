@@ -41,12 +41,14 @@ source venv/bin/activate
 <code>
 FLASK_CONFIG="config.DevelopmentConfig"
 FLASK_APP="run.py"
+FLASK_DEBUG=1
 SECRET_KEY="klk@#fsdjfonj134njnf"
-MAIL_PASSWORD="MAIL_PASSWORD"
+MAIL_PASSWORD="a2AxKKAGKxsTs28KMfzY"
 MAIL_PORT="465"
 MAIL_SERVER="smtp.mail.ru"
-MAIL_USERNAME="makskislyak1@mail.ru"
-CELERY_BROKER_URL="redis://localhost:6379/0"
+MAIL_USERNAME="mail@mail.com"
+CELERY_BROKER_URL="redis://redis:6379/0"
+LIMITER_STORAGE_URL="redis://redis:6379"
 DEV_DATABASE_URI="sqlite:///flaskwatchdog_dev.db"
 TEST_DATABASE_URI="sqlite:///flaskwatchdog_test.db"
 PROD_DATABASE_URI="sqlite:///flaskwatchdog_prod.db"
