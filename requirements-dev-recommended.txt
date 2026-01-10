@@ -1,0 +1,43 @@
+# FlaskWatchdog - Development & Testing Dependencies (Recommended)
+# Last Updated: 2026-01-10
+
+# Include production dependencies
+-r requirements-prod-recommended.txt
+
+# Testing Framework
+pytest==9.0.2
+pytest-cov==7.0.0
+pytest-xdist==3.6.1
+pytest-celery==1.1.0
+
+# Code Coverage
+coverage[toml]==7.13.1
+
+# HTML Parsing (for testing)
+beautifulsoup4==4.12.3
+soupsieve==2.6.1
+
+# Code Quality & Formatting
+black==25.1.0
+flake8==7.1.1
+isort==5.14.0
+mypy==1.15.0
+
+# Security Auditing
+pip-audit==2.10.0
+
+# Development Utilities
+ipython==8.31.0
+ipdb==0.14.2
+
+# Testing Utilities
+execnet==2.1.2
+iniconfig==2.0.0
+pluggy==1.5.0
+
+# Type Checking
+typing_extensions==4.15.0
+
+# Rich Terminal Output (for dev tools)
+rich==14.2.0
+Pygments==2.19.2
