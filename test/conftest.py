@@ -23,15 +23,12 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../F
 # Define a fixture for the Flask application
 @pytest.fixture(scope="function")
 def app():
-    flask_app = create_app(config['testing'])
+    flask_app, celery = create_app(config['testing'])
     # Set configuration for testing environment
     # flask_app.config.from_object(TestingConfig)
 
-    # Create and configure the Celery instance for testing
-    from app.extensions import make_celery
-    with flask_app.app_context():
-        test_celery = make_celery(flask_app)
-        ext_celery.celery = test_celery
+    # The celery instance is already created by create_app
+    # No need to create it again
 
     return flask_app
 
