@@ -13,7 +13,7 @@ def test_redis_connection():
     Test to verify that the connection to Redis is successful and basic operations are working.
     """
     # Create an instance of the Flask app with the testing configuration
-    app = create_app(TestingConfig)
+    app, celery = create_app(TestingConfig)
 
     # Get the Redis connection details from the app's configuration
     redis_url = app.config['CELERY_BROKER_URL']
