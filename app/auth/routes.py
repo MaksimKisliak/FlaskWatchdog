@@ -61,15 +61,18 @@ def register():
     return render_template('auth/register.html', is_admin=is_admin, form=form)
 
 
-@auth_bp.route('/logout')
+@auth_bp.route('/logout', methods=['POST'])
 @login_required
 def logout():
+    """Logout requires POST to prevent CSRF attacks"""
     logout_user()
-    return redirect(url_for('main.dashboard'))
+    flash('You have been logged out successfully.')
+    return redirect(url_for('auth.login'))
 
 
 @auth_bp.route('/admin', methods=['GET', 'POST'])
 @login_required
+@limiter.limit("50 per minute")
 def admin():
     if not current_user.is_admin:
         abort(403)
