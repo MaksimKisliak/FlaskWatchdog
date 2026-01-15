@@ -83,6 +83,9 @@ def create_app(config_class=None):
     from app.auth import auth_bp
     app.register_blueprint(auth_bp)
 
+    from app.games import games_bp
+    app.register_blueprint(games_bp)
+
     # Add objects to Flask shell context shell context for flask cli
     # Therefore there's no need to import db via from app import db in Flask shell? Those are added to the
     # shell context with shell_context_processor in the create_app function.
